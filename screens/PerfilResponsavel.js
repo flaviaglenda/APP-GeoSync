@@ -15,6 +15,13 @@ export default function PerfilScreen() {
         end={{ x: 1, y: 0 }}
         style={styles.header}
       >
+      <TouchableOpacity 
+        style={styles.backButton} 
+        onPress={() => navigation.goBack()}
+      >
+      <Ionicons name="arrow-back" size={24} color="#fff" />
+        </TouchableOpacity>
+
         <Text style={styles.headerText}>PERFIL</Text>
       </LinearGradient>
 
@@ -54,16 +61,24 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
   },
   header: {
-    height: 80,
-    justifyContent: "flex-end",
-    alignItems: "center",
-    paddingBottom: 10,
-    width: "100%",
+  height: 80,
+  flexDirection: "row",  // Ícone e texto lado a lado
+  alignItems: "flex-end",
+  justifyContent: "center",
+  paddingBottom: 10,
+  paddingHorizontal: 10,
+  },
+  backButton: {
+  position: "absolute",  // fixa o botão no canto
+  left: 10,
+  bottom: 25,
+  
   },
   headerText: {
-    fontSize: 20,
-    fontWeight: "bold",
-    color: "#fff",
+  marginBottom: 9,
+  fontSize: 30,
+  fontWeight: "medion",
+  color: "#fff",
   },
   avatarContainer: {
     alignItems: "center",
