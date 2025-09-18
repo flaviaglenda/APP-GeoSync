@@ -24,6 +24,7 @@ import Cadastrar from "./screens/RealizarCadastro";
 import HomeScreen from "./screens/HomeScreen";
 import Notificacoes from "./screens/Notificacoes";
 import PerfilResponsavel from "./screens/PerfilResponsavel";
+import EsqueceuSenha from "./screens/esqueceuSenha";
 import Localizacao from "./screens/Localizacao";
 
 const Drawer = createDrawerNavigator();
@@ -131,6 +132,7 @@ export default function App() {
         <Stack.Screen name="Login" component={Login} />
         <Stack.Screen name="Cadastrar" component={Cadastrar} />
         <Stack.Screen name="Main" component={DrawerNavigator} />
+        <Stack.Screen name="EsqueceuSenha" component={EsqueceuSenha} />
       </Stack.Navigator>
     </NavigationContainer>
   );
@@ -168,3 +170,4 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
 });
+

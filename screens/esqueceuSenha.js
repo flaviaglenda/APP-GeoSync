@@ -22,7 +22,7 @@ export default function LoginScreen({ navigation }) {
       >
        <TouchableOpacity
       style={styles.backButton}
-      onPress={() => navigation.navigate("Comeco")}
+      onPress={() => navigation.navigate("Login")}
     >
       <FontAwesome name="chevron-left" size={28} color="#fff" />
     </TouchableOpacity>
@@ -33,7 +33,7 @@ export default function LoginScreen({ navigation }) {
           resizeMode="contain"
         />
 
-        <Text style={styles.title}>LOGIN</Text>
+        <Text style={styles.title}>RECUPERAR SENHA</Text>
 
         <View style={styles.inputContainer}>
           <Text style={styles.label}>EMAIL:</Text>
@@ -43,19 +43,19 @@ export default function LoginScreen({ navigation }) {
             keyboardType="email-address"
           />
 
-          <Text style={styles.label}>SENHA:</Text>
+          <Text style={styles.label}>NOVA SENHA:</Text>
           <TextInput
             style={styles.input}
             placeholderTextColor="#ccc"
             secureTextEntry={true}
           />
 
-        <TouchableOpacity
-      style={styles.forgotButton}
-      onPress={() => navigation.navigate("EsqueceuSenha")} 
-    >
-      <Text style={styles.forgotText}>Esqueceu a senha?</Text>
-    </TouchableOpacity>
+           <Text style={styles.label}>CONFIRMAR SENHA:</Text>
+          <TextInput
+            style={styles.input}
+            placeholderTextColor="#ccc"
+            secureTextEntry={true}
+          />
         </View>
 
         <TouchableOpacity
@@ -63,13 +63,9 @@ export default function LoginScreen({ navigation }) {
         onPress={() => navigation.replace("Main")}
 
         >
-          <Text style={styles.loginText}>ENTRAR</Text>
+          <Text style={styles.loginText}>CONFIRMAR</Text>
         </TouchableOpacity>
 
-        <Text style={styles.registerText}>
-          Não possui conta? <Text style={styles.registerLink}
-           onPress={() => navigation.navigate("Cadastrar")} >Cadastrar</Text>
-        </Text>
       </KeyboardAvoidingView>
     </LinearGradient>
   );
