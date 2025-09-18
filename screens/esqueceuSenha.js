@@ -50,7 +50,8 @@ export default function LoginScreen({ navigation }) {
             secureTextEntry={true}
           />
 
-           <Text style={styles.label}>CONFIRMAR SENHA:</Text>
+           <Text style={styles.label}
+           >CONFIRMAR SENHA:</Text>
           <TextInput
             style={styles.input}
             placeholderTextColor="#ccc"
@@ -60,7 +61,7 @@ export default function LoginScreen({ navigation }) {
 
         <TouchableOpacity
           style={styles.loginButton}
-        onPress={() => navigation.replace("Main")}
+        onPress={() => navigation.replace("Login")}
 
         >
           <Text style={styles.loginText}>CONFIRMAR</Text>
