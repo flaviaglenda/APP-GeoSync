@@ -8,11 +8,13 @@ import {
   StyleSheet,
   KeyboardAvoidingView,
   Platform,
+   Dimensions
 } from "react-native";
 import { FontAwesome } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 
 export default function LoginScreen({ navigation }) {
+   const { height, width } = Dimensions.get("screen");
 
   return (
     <LinearGradient colors={["#000000", "#780b47"]} style={styles.container}>
@@ -41,7 +43,7 @@ export default function LoginScreen({ navigation }) {
 
           <Text style={styles.label}>NOME:</Text>
           <TextInput
-            style={styles.input}
+            style={[styles.input, { width: width * 0.8}]}
             placeholderTextColor="#ccc"
             keyboardType="name-address"
           />
@@ -105,19 +107,19 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   backButton: {
-    position: "absolute",
-    top: 50,
-    left: 20,
+       position: "absolute",
+    top: 100,
+    left: 75,
   },
   logo: {
-    width: 300,
-    height: 300,
-    marginBottom: -80,
+    width: 400,
+    height: 400,
+    marginBottom: -120,
     marginTop: -50,
   },
   title: {
-    color: "#fff",
-    fontSize: 24,
+   color: "#fff",
+    fontSize: 30,
     fontWeight: "bold",
     marginBottom: 90,
     marginTop: -40,
@@ -142,11 +144,11 @@ const styles = StyleSheet.create({
     alignSelf: "flex-end",
   },
   forgotText: {
-    color: "#ccc",
-    fontSize: 12,
+     color: "#ccc",
+    fontSize: 17,
   },
   loginButton: {
-    backgroundColor: "#ffffffff",
+ backgroundColor: "#ffffffff",
     width: 180,
     paddingVertical: 15,
     borderRadius: 20,
@@ -155,10 +157,11 @@ const styles = StyleSheet.create({
   },
   loginText: {
     color: "#50062F",
+    fontSize: 18
   },
   registerText: {
     color: "#fff",
-    fontSize: 14,
+    fontSize: 18,
   },
   registerLink: {
     fontWeight: "bold",
