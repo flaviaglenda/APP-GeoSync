@@ -13,14 +13,14 @@ import { useIsFocused } from "@react-navigation/native";
 
 export default function Notificacoes() {
   const [notificacoes, setNotificacoes] = useState([]);
-  const [limpado, setLimpado] = useState(false); // ✅ novo estado
+  const [limpado, setLimpado] = useState(false);
   const isFocused = useIsFocused();
 
   const notificacoesIniciais = [
     {
       id: 1,
       icon: "exclamation-triangle",
-      title: "Mochila aberta fora do horário.",
+      title: "Botão de pânico pressionado.",
       time: "Hoje, 19:00h",
     },
     {
@@ -42,13 +42,13 @@ export default function Notificacoes() {
       setNotificacoes(notificacoesIniciais);
     }
     if (isFocused && limpado) {
-      setLimpado(false); // resetar quando voltar
+      setLimpado(false); 
     }
   }, [isFocused]);
 
   const limparNotificacoes = () => {
     setNotificacoes([]);
-    setLimpado(true); // marcar como limpado
+    setLimpado(true); 
   };
 
   return (
@@ -132,7 +132,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#ccc",
     borderRadius: 10,
-    padding: 15,
+    padding: 20,
     marginBottom: 15,
     backgroundColor: "#fff",
     shadowColor: "#000",
@@ -148,13 +148,14 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   title: {
-    fontSize: 16,
+    fontSize: 20,
     color: "#333",
   },
   time: {
-    fontSize: 12,
-    color: "#999",
+    fontSize: 14,
+    color: "#000000ff",
     marginTop: 5,
+      fontWeight: "110",
   },
   semNotifContainer: {
     flex: 1,
@@ -164,7 +165,7 @@ const styles = StyleSheet.create({
   },
   semNotifText: {
     fontSize: 32,
-    fontWeight: "light",
+     fontWeight: "110",
     marginBottom: 20,
     color: "#333",
   },
