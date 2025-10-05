@@ -16,18 +16,23 @@ import { LinearGradient } from "expo-linear-gradient";
 export default function LoginScreen({ navigation }) {
    const { height, width } = Dimensions.get("screen");
 
+   const handleBack = () => {
+    if (navigation.canGoBack()) {
+      navigation.goBack();
+    } else {
+      navigation.navigate("Login");
+    }
+  };
+
   return (
     <LinearGradient colors={["#000000", "#780b47"]} style={styles.container}>
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         style={styles.innerContainer}
       >
-         <TouchableOpacity
-      style={styles.backButton}
-      onPress={() => navigation.navigate("Comeco")}
-    >
-      <FontAwesome name="chevron-left" size={28} color="#fff" />
-    </TouchableOpacity>
+     <TouchableOpacity style={styles.backButton} onPress={handleBack}>
+               <FontAwesome name="arrow-left" size={28} color="#fff" />
+             </TouchableOpacity>
 
         <Image
           source={require("../src/assets/logo_geosync_fundotransparente.png")}
@@ -71,7 +76,7 @@ export default function LoginScreen({ navigation }) {
 
         <TouchableOpacity
           style={styles.loginButton}
-        onPress={() => navigation.replace("Main")}
+        onPress={() => navigation.replace("Login")}
 
         >
           <Text style={styles.loginText}>ENTRAR</Text>
@@ -92,14 +97,6 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
-   backButton: {
-    backgroundColor: "#ffffffff",
-    padding: 3,
-    borderRadius: 50,
-    position: "absolute",
-    top: 40,
-    left: 20,
-  },
   innerContainer: {
     flex: 1,
     padding: 30,
@@ -107,9 +104,13 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   backButton: {
-       position: "absolute",
-    top: 100,
-    left: 75,
+    position: "absolute",
+    top: 70,
+    left: 50,
+    padding: 10,
+    zIndex: 10,
+    backgroundColor: "rgba(0,0,0,0.5)",
+    borderRadius: 30,
   },
   logo: {
     width: 400,
@@ -118,15 +119,14 @@ const styles = StyleSheet.create({
     marginTop: -50,
   },
   title: {
-   color: "#fff",
+    color: "#fff",
     fontSize: 30,
     fontWeight: "bold",
     marginBottom: 90,
     marginTop: -40,
   },
   inputContainer: {
-    width: "100%",
-    marginBottom: 30,
+    marginBottom: 40,
   },
   label: {
     color: "#fff",
@@ -144,11 +144,11 @@ const styles = StyleSheet.create({
     alignSelf: "flex-end",
   },
   forgotText: {
-     color: "#ccc",
+    color: "#ccc",
     fontSize: 17,
   },
   loginButton: {
- backgroundColor: "#ffffffff",
+    backgroundColor: "#ffffffff",
     width: 180,
     paddingVertical: 15,
     borderRadius: 20,
@@ -157,7 +157,7 @@ const styles = StyleSheet.create({
   },
   loginText: {
     color: "#50062F",
-    fontSize: 18
+    fontSize: 18,
   },
   registerText: {
     color: "#fff",

@@ -16,18 +16,23 @@ import { FontAwesome } from "@expo/vector-icons";
 export default function LoginScreen({ navigation }) {
   const { height, width } = Dimensions.get("screen");
 
+  const handleBack = () => {
+    if (navigation.canGoBack()) {
+      navigation.goBack();
+    } else {
+      navigation.navigate("Comeco");
+    }
+  };
+
   return (
     <LinearGradient colors={["#000000", "#780b47"]} style={styles.container}>
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         style={styles.innerContainer}
       >
-       <TouchableOpacity
-      style={styles.backButton}
-      onPress={() => navigation.navigate("Comeco")}
-    >
-      <FontAwesome name="chevron-left" size={28} color="#fff" />
-    </TouchableOpacity>
+        <TouchableOpacity style={styles.backButton} onPress={handleBack}>
+          <FontAwesome name="arrow-left" size={28} color="#fff" />
+        </TouchableOpacity>
 
         <Image
           source={require("../src/assets/logo_geosync_fundotransparente.png")}
@@ -40,7 +45,7 @@ export default function LoginScreen({ navigation }) {
         <View style={styles.inputContainer}>
           <Text style={styles.label}>EMAIL:</Text>
           <TextInput
-            style={[styles.input, { width: width * 0.8}]}
+            style={[styles.input, { width: width * 0.8 }]}
             placeholderTextColor="#ccc"
             keyboardType="email-address"
           />
@@ -52,25 +57,29 @@ export default function LoginScreen({ navigation }) {
             secureTextEntry={true}
           />
 
-        <TouchableOpacity
-      style={styles.forgotButton}
-      onPress={() => navigation.navigate("EsqueceuSenha")} 
-    >
-      <Text style={styles.forgotText}>Esqueceu a senha?</Text>
-    </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.forgotButton}
+            onPress={() => navigation.navigate("EsqueceuSenha")}
+          >
+            <Text style={styles.forgotText}>Esqueceu a senha?</Text>
+          </TouchableOpacity>
         </View>
 
         <TouchableOpacity
           style={styles.loginButton}
-        onPress={() => navigation.replace("Main")}
-
+          onPress={() => navigation.navigate("Main")}
         >
           <Text style={styles.loginText}>ENTRAR</Text>
         </TouchableOpacity>
 
         <Text style={styles.registerText}>
-          Não possui conta? <Text style={styles.registerLink}
-           onPress={() => navigation.navigate("Cadastrar")} >Cadastrar</Text>
+          Não possui conta?{" "}
+          <Text
+            style={styles.registerLink}
+            onPress={() => navigation.navigate("Cadastrar")}
+          >
+            Cadastrar
+          </Text>
         </Text>
       </KeyboardAvoidingView>
     </LinearGradient>
@@ -91,8 +100,12 @@ const styles = StyleSheet.create({
   },
   backButton: {
     position: "absolute",
-    top: 100,
-    left: 75,
+    top: 70,
+    left: 50,
+    padding: 10,
+    zIndex: 10,
+    backgroundColor: "rgba(0,0,0,0.5)",
+    borderRadius: 30,
   },
   logo: {
     width: 400,
@@ -139,7 +152,7 @@ const styles = StyleSheet.create({
   },
   loginText: {
     color: "#50062F",
-    fontSize: 18
+    fontSize: 18,
   },
   registerText: {
     color: "#fff",

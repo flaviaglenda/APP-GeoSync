@@ -23,7 +23,6 @@ export default function PerfilResponsavel({ navigation }) {
 
       <Text style={styles.sectionTitle}>INFORMAÇÕES GERAIS</Text>
 
-      {/* Navegar para EditarResponsavel */}
       <TouchableOpacity
         style={styles.option}
         onPress={() => navigation.navigate("EditarResponsavel")}
