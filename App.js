@@ -25,6 +25,9 @@ import EditarResponsavel from "./screens/EditarPerfilResponsavel";
 import EsqueceuSenha from "./screens/esqueceuSenha";
 import Localizacao from "./screens/Localizacao";
 import ManualMochila from "./screens/ManualMochila";
+import GerenciarCrianca from "./screens/GerenciarCrianca";
+import PerfilCrianca from "./screens/PerfilCrianca";
+import AdicionarCrianca from "./screens/AdicionarCrianca";
 
 const Drawer = createDrawerNavigator();
 const Stack = createStackNavigator();
@@ -40,6 +43,18 @@ function PerfilStackNavigator() {
       <PerfilStack.Screen
         name="EditarResponsavel"
         component={EditarResponsavel}
+      />
+            <PerfilStack.Screen
+        name="GerenciarCrianca"
+        component={GerenciarCrianca}
+      />
+       <PerfilStack.Screen
+        name="PerfilCrianca"
+        component={PerfilCrianca}
+      />
+        <PerfilStack.Screen
+        name="AdicionarCrianca"
+        component={AdicionarCrianca}
       />
     </PerfilStack.Navigator>
   );

@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import {
   View,
@@ -6,6 +7,9 @@ import {
   TextInput,
   TouchableOpacity,
   ScrollView,
+  SafeAreaView,
+  Platform,
+  StatusBar,
 } from "react-native";
 import { FontAwesome } from "@expo/vector-icons";
 import { Ionicons } from "@expo/vector-icons";
@@ -18,94 +22,105 @@ export default function EditarResponsavel({ navigation }) {
   const [confirmarSenha, setConfirmarSenha] = useState("");
 
   return (
-    <View style={styles.container}>
-      <LinearGradient
-        colors={["#000000ff", "#780b47"]}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 0 }}
-        style={styles.header}
-      >
-        <Text style={styles.headerText}>EDITAR PERFIL</Text>
-
-        <TouchableOpacity
-          style={styles.backButton}
-          onPress={() => navigation.navigate("PerfilResponsavel")}
+    <SafeAreaView style={styles.safeArea}>
+      <View style={styles.container}>
+        <LinearGradient
+          colors={["#000000", "#780b47"]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 0 }}
+          style={styles.header}
         >
-          <FontAwesome name="arrow-left" size={22} color="#fff" />
-        </TouchableOpacity>
-      </LinearGradient>
+          <TouchableOpacity
+            style={styles.backButton}
+            onPress={() => navigation.navigate("PerfilResponsavel")}
+          >
+            <FontAwesome name="arrow-left" size={24} color="#fff" />
+          </TouchableOpacity>
+          <Text style={styles.headerText}>EDITAR PERFIL</Text>
+        </LinearGradient>
 
-      <ScrollView
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.scrollContent}
-      >
-        <View style={styles.avatarContainer}>
-          <View style={styles.avatarWrapper}>
-            <Ionicons name="person" size={120} color="#000" />
-            <TouchableOpacity style={styles.editIcon}>
-              <FontAwesome name="pencil" size={16} color="#fff" />
-            </TouchableOpacity>
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={styles.scrollContent}
+        >
+          <View style={styles.avatarContainer}>
+            <View style={styles.avatarWrapper}>
+              <Ionicons name="person" size={100} color="#000000ff" />
+              <TouchableOpacity style={styles.editIcon}>
+                <FontAwesome name="pencil" size={18} color="#fff" />
+              </TouchableOpacity>
+            </View>
+             <Text style={styles.nomeResponsavel}>Miguel</Text>
           </View>
-          <Text style={styles.editPhotoText}>Alterar foto</Text>
-        </View>
 
-        <View style={styles.inputContainer}>
-          <Text style={styles.label}>EMAIL:</Text>
-          <TextInput
-            style={styles.input}
-            value={email}
-            onChangeText={setEmail}
-            keyboardType="email-address"
-          />
+          <View style={styles.inputContainer}>
+            <Text style={styles.label}>EMAIL</Text>
+            <TextInput
+              style={styles.input}
+              value={email}
+              onChangeText={setEmail}
+              keyboardType="email-address"
+              placeholder="Seu email"
+              placeholderTextColor="#888"
+            />
 
-          <Text style={[styles.label, { marginTop: 20 }]}>TELEFONE:</Text>
-          <TextInput
-            style={styles.input}
-            value={telefone}
-            onChangeText={setTelefone}
-            keyboardType="phone-pad"
-          />
+            <Text style={styles.label}>TELEFONE</Text>
+            <TextInput
+              style={styles.input}
+              value={telefone}
+              onChangeText={setTelefone}
+              keyboardType="phone-pad"
+              placeholder="Seu telefone"
+              placeholderTextColor="#888"
+            />
 
-          <Text style={[styles.label, { marginTop: 20 }]}>NOVA SENHA:</Text>
-          <TextInput
-            style={styles.input}
-            value={novaSenha}
-            onChangeText={setNovaSenha}
-            secureTextEntry
-            placeholder="Digite sua nova senha"
-          />
+            <Text style={styles.label}>NOVA SENHA</Text>
+            <TextInput
+              style={styles.input}
+              value={novaSenha}
+              onChangeText={setNovaSenha}
+              secureTextEntry
+              placeholder="Digite sua nova senha"
+              placeholderTextColor="#888"
+            />
 
-          <Text style={[styles.label, { marginTop: 20 }]}>
-            CONFIRMAR NOVA SENHA:
-          </Text>
-          <TextInput
-            style={styles.input}
-            value={confirmarSenha}
-            onChangeText={setConfirmarSenha}
-            secureTextEntry
-            placeholder="Confirme sua nova senha"
-          />
-        </View>
+            <Text style={styles.label}>
+              CONFIRMAR NOVA SENHA
+            </Text>
+            <TextInput
+              style={styles.input}
+              value={confirmarSenha}
+              onChangeText={setConfirmarSenha}
+              secureTextEntry
+              placeholder="Confirme sua nova senha"
+              placeholderTextColor="#888"
+            />
+          </View>
 
-        <TouchableOpacity
-          style={styles.saveButton}
-          onPress={() => navigation.goBack()}
-        >
-          <Text style={styles.saveButtonText}>SALVAR</Text>
-        </TouchableOpacity>
-      </ScrollView>
-    </View>
+          <TouchableOpacity
+            style={styles.saveButton}
+            onPress={() => navigation.goBack()}
+          >
+            <Text style={styles.saveButtonText}>SALVAR</Text>
+          </TouchableOpacity>
+        </ScrollView>
+      </View>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: "#f0f2f5",
+    paddingTop: Platform.OS === "android" ? StatusBar.currentHeight : 0,
+  },
   container: {
     flex: 1,
-    backgroundColor: "#fff",
-    paddingTop: 50,
+    backgroundColor: "#e9e9ebff", 
   },
   header: {
-    marginTop: -55,
+    marginTop: -10,
     height: 80,
     flexDirection: "row",
     alignItems: "flex-end",
@@ -121,11 +136,11 @@ const styles = StyleSheet.create({
   },
   backButton: {
     position: "absolute",
-    left: 20,
-    bottom: 25,
+    left: 23,
+    bottom: 26,
   },
   scrollContent: {
-    paddingBottom: 50,
+    paddingBottom: 30,
   },
   avatarContainer: {
     alignItems: "center",
@@ -133,52 +148,85 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   avatarWrapper: {
-    position: "relative",
+    width: 150,
+    height: 150,
+    borderRadius: 75,
+    justifyContent: "center",
+    alignItems: "center",
+    borderWidth: 3,
+    borderColor: "#780b47",
+    marginBottom: 10,
+    elevation: 5,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
   },
   editIcon: {
     position: "absolute",
-    bottom: 10,
-    right: -17,
+    bottom: 5,
+    right: 5,
     backgroundColor: "#780b47",
     borderRadius: 20,
-    padding: 6,
+    padding: 8,
+    borderWidth: 2,
+    borderColor: "#fff",
   },
-  editPhotoText: {
-    marginTop: 5,
-    fontSize: 14,
-    color: "#000",
-  },
-  inputContainer: {
-    marginHorizontal: 30,
-    marginTop: 10,
-  },
-  label: {
-    fontSize: 14,
+  nomeResponsavel: {
+    fontSize: 28,
+    color: "#333",
     fontWeight: "bold",
-    color: "#000",
     marginBottom: 5,
   },
+  inputContainer: {
+    marginHorizontal: 25,
+    marginTop: 20,
+    backgroundColor: "#fff",
+    borderRadius: 15,
+    padding: 20,
+    elevation: 3,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.22,
+    shadowRadius: 2.22,
+  },
+  label: {
+    marginTop: 15,
+    fontSize: 13,
+    fontWeight: "bold",
+    color: "#555",
+    marginBottom: 8,
+    textTransform: "uppercase",
+  },
   input: {
-    height: 40,
-    borderWidth: 1,
-    borderColor: "#ccc",
-    borderRadius: 8,
-    paddingHorizontal: 10,
-    backgroundColor: "#f2f2f2",
-    color: "#000",
+    height: 45,
+    borderBottomWidth: 1, 
+    borderBottomColor: "#929292ff", 
+    borderRadius: 0, 
+    paddingHorizontal: 0, 
+    backgroundColor: "transparent", 
+    color: "#333",
+    fontSize: 16,
   },
   saveButton: {
     backgroundColor: "#780b47",
-    paddingVertical: 12,
-    marginHorizontal: 130,
-    borderRadius: 14,
+    paddingVertical: 15,
+    marginHorizontal: 25,
+    borderRadius: 15,
     alignItems: "center",
-    marginTop: 40,
+    marginTop: 30,
     marginBottom: 20,
+    elevation: 5,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
   },
   saveButtonText: {
     color: "#fff",
     fontWeight: "bold",
-    fontSize: 16,
+    fontSize: 18,
+    textTransform: "uppercase",
   },
 });
+

@@ -70,7 +70,7 @@ export default function ManualMochila() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#fff",
+    backgroundColor: "#e9e9ebff",
     padding: 15,
   },
   header: {

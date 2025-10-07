@@ -53,7 +53,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#AE156B",
     paddingVertical: 12,
     paddingHorizontal: 60,
-    borderRadius: 8,
+    borderRadius: 20,
     marginBottom: 15,
     marginTop: 150,
   },
@@ -67,7 +67,7 @@ const styles = StyleSheet.create({
     borderColor: "#AE156B",
     paddingVertical: 12,
     paddingHorizontal: 42,
-    borderRadius: 8,
+    borderRadius: 20,
     marginBottom: 15,
   },
   registerText: {
