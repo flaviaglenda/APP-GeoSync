@@ -14,7 +14,7 @@ export default function PerfilResponsavel({ navigation }) {
         end={{ x: 1, y: 0 }}
         style={styles.header}
       >
-        <Text style={styles.headerText}>PERFIL</Text>
+        <Text style={styles.headerText}>PERFIL RESPONSÁVEL</Text>
       </LinearGradient>
 
       <View style={styles.avatarContainer}>
@@ -32,7 +32,6 @@ export default function PerfilResponsavel({ navigation }) {
       </TouchableOpacity>
 
       <View style={styles.option}>
-        <Ionicons name="moon-outline" size={35} color="black" />
         <Switch value={darkMode} onValueChange={setDarkMode} />
         <Text style={styles.optionText}>Modo escuro.</Text>
       </View>
@@ -71,23 +70,26 @@ const styles = StyleSheet.create({
   avatarContainer: {
     alignItems: "center",
     marginVertical: 20,
+    marginBottom: 60,
+    marginTop: 50,  
   },
   sectionTitle: {
     fontSize: 24,
     fontWeight: "regular",
-    marginLeft: 20,
-    marginBottom: 10,
+    marginLeft: 30,
+    marginBottom: 30,
+     fontWeight: "4S00",
   },
   option: {
     flexDirection: "row",
     alignItems: "center",
     marginTop: 10,
     marginVertical: 10,
-    marginLeft: 20,
+    marginLeft: 30,
   },
   optionText: {
     marginLeft: 20,
-    fontSize: 20,
-    fontWeight: "100",
+    fontSize: 22,
+    fontWeight: "300",
   },
 });

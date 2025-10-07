@@ -8,7 +8,6 @@ export default function ManualMochila() {
 
   return (
     <View style={{ flex: 1 }}>
-      {/* HEADER */}
       <LinearGradient
         colors={["#000000ff", "#780b47"]}
         start={{ x: 0, y: 0 }}
@@ -19,7 +18,7 @@ export default function ManualMochila() {
       </LinearGradient>
 
       <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
-        
+
         <Image
           source={require("../src/assets/img_manual.png")}
           style={[styles.image, { width: width - 120 }]}
@@ -28,8 +27,8 @@ export default function ManualMochila() {
 
         <View style={styles.paragraph}>
           <Text style={styles.paragraphText}>
-            Esta mochila inteligente foi criada para garantir a segurança de crianças,
-            unindo tecnologia de rastreamento, sensores e conectividade. Ela permite que
+            A mochila GeoSync foi criada para garantir a segurança de crianças,
+            unindo tecnologia de rastreamento, sensores e conectividade. Ela permite que os
             responsáveis monitorem a localização em tempo real e acompanhem o trajeto completo
             através de um aplicativo intuitivo.
           </Text>
@@ -41,31 +40,28 @@ export default function ManualMochila() {
 
         <View style={styles.card}>
           <Text style={styles.cardTitle}>
-            <FontAwesome5 name="cogs" size={20} color="#96125B" /> Funcionalidades
+            <FontAwesome5 name="plug" size={20} color="#96125B" /> Como conectar?
           </Text>
           <Text style={styles.cardText}>
-            - Rastreamento em tempo real.{'\n'}
+              Para começar, siga estes passos simples:{'\n\n'}
+            1. Certifique-se de que o Bluetooth ou Wi‑Fi do aparelho está ligado.{'\n'}
+            2. Ligue a mochila inteligente.{'\n'}
+            3. No app, toque em “Conectar Mochila”.{'\n'}
+            4. Aguarde a confirmação de conexão — e pronto! A mochila já estará rastreando em tempo real.
+          </Text>
+        </View>
+
+        <View style={styles.paragraph}>
+          <Text style={styles.paragraphTitle}>
+            <FontAwesome5 name="cogs" size={20} color="#96125B" /> Funcionalidades
+          </Text>
+          <Text style={styles.paragraphText}>
+          - Rastreamento em tempo real.{'\n'}
             - Módulo Wi-Fi para envio de dados.{'\n'}
             - Alimentação por bateria portátil.{'\n'}
             - Botão de pânico para emergências.
           </Text>
         </View>
-{/* COMO CONECTAR (parágrafo simples) */}
-<View style={styles.paragraph}>
-  <Text style={styles.paragraphTitle}>
-    <FontAwesome5 name="plug" size={20} color="#96125B" /> Como Conectar
-  </Text>
-  <Text style={styles.paragraphText}>
-    Para começar, siga estes passos simples:{'\n\n'}
-    1. Certifique-se de que o Bluetooth ou Wi‑Fi do aparelho está ligado.{'\n'}
-    2. Ligue a mochila inteligente.{'\n'}
-    3. No app, toque em “Conectar Mochila”.{'\n'}
-    4. Aguarde a confirmação de conexão — e pronto! A mochila já estará rastreando em tempo real.
-  </Text>
-</View>
-
-
-
       </ScrollView>
     </View>
   );
@@ -77,7 +73,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
     padding: 15,
   },
-   header: {
+  header: {
     marginTop: -10,
     height: 80,
     flexDirection: "row",
@@ -114,7 +110,7 @@ const styles = StyleSheet.create({
     color: "#333",
     lineHeight: 26,
     textAlign: "justify",
-     marginBottom: 15,
+    marginBottom: 15,
   },
   card: {
     backgroundColor: "#f9f1f7",
