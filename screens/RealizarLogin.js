@@ -40,7 +40,7 @@ export default function LoginScreen({ navigation }) {
           resizeMode="contain"
         />
 
-        <Text style={styles.title}>LOGIN</Text>
+        <Text style={styles.title}>ENTRAR</Text>
 
         <View style={styles.inputContainer}>
           <Text style={styles.label}>EMAIL:</Text>
