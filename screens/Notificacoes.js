@@ -81,7 +81,7 @@ export default function Notificacoes() {
               <FontAwesome5
                 name={item.icon}
                 size={24}
-                color="#c2185b"
+                color="#780b47"
                 style={styles.icon}
               />
               <View style={styles.textContainer}>
