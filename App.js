@@ -84,7 +84,7 @@ function DrawerNavigator() {
               width: 200,
               height: 200,
               marginRight: -55,
-              marginTop: 45,
+              marginTop: 35,
             }}
             resizeMode="contain"
           />
@@ -184,7 +184,6 @@ export default function App() {
   );
 }
 
-// 🔹 Estilos
 const styles = StyleSheet.create({
   drawerContent: {
     flex: 1,
