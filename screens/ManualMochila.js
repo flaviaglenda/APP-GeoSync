@@ -24,7 +24,7 @@ export default function ManualMochila() {
         showsVerticalScrollIndicator={false}
       >
         <Image
-          source={require("../src/assets/mochila_semfundo.png")}
+          source={require("../src/assets/img_manual.png")}
           style={[styles.image, { width: width - 100 }]}
           resizeMode="cover"
         />
@@ -100,7 +100,7 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     alignSelf: "center",
     marginTop: -10,
-    marginRight: 40,
+    marginRight: -20,
   },
   paragraph: {
     marginBottom: 20,
