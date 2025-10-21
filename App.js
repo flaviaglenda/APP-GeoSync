@@ -29,6 +29,8 @@ import GerenciarCrianca from "./screens/GerenciarCrianca";
 import PerfilCrianca from "./screens/PerfilCrianca";
 import AdicionarCrianca from "./screens/AdicionarCrianca";
 
+import { ThemeProvider } from "./ThemeContext"; 
+
 const Drawer = createDrawerNavigator();
 const Stack = createStackNavigator();
 const PerfilStack = createStackNavigator();
@@ -44,15 +46,15 @@ function PerfilStackNavigator() {
         name="EditarResponsavel"
         component={EditarResponsavel}
       />
-            <PerfilStack.Screen
+      <PerfilStack.Screen
         name="GerenciarCrianca"
         component={GerenciarCrianca}
       />
-       <PerfilStack.Screen
+      <PerfilStack.Screen
         name="PerfilCrianca"
         component={PerfilCrianca}
       />
-        <PerfilStack.Screen
+      <PerfilStack.Screen
         name="AdicionarCrianca"
         component={AdicionarCrianca}
       />
@@ -172,22 +174,24 @@ function CustomDrawerContent(props) {
 
 export default function App() {
   return (
-    <NavigationContainer>
-      <Stack.Navigator screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="Comeco" component={Comeco} />
-        <Stack.Screen name="Login" component={Login} />
-        <Stack.Screen name="Cadastrar" component={Cadastrar} />
-        <Stack.Screen name="EsqueceuSenha" component={EsqueceuSenha} />
-        <Stack.Screen name="Main" component={DrawerNavigator} />
-      </Stack.Navigator>
-    </NavigationContainer>
+    <ThemeProvider> 
+      <NavigationContainer>
+        <Stack.Navigator screenOptions={{ headerShown: false }}>
+          <Stack.Screen name="Comeco" component={Comeco} />
+          <Stack.Screen name="Login" component={Login} />
+          <Stack.Screen name="Cadastrar" component={Cadastrar} />
+          <Stack.Screen name="EsqueceuSenha" component={EsqueceuSenha} />
+          <Stack.Screen name="Main" component={DrawerNavigator} />
+        </Stack.Navigator>
+      </NavigationContainer>
+    </ThemeProvider>
   );
 }
 
 const styles = StyleSheet.create({
   drawerContent: {
     flex: 1,
-    backgroundColor: "#000",
+    backgroundColor: "#000", 
     paddingTop: 20,
   },
   closeBtn: {

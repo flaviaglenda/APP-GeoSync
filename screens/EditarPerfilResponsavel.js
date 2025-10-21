@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import {
   View,
@@ -11,19 +10,27 @@ import {
   Platform,
   StatusBar,
 } from "react-native";
-import { FontAwesome } from "@expo/vector-icons";
-import { Ionicons } from "@expo/vector-icons";
+import { FontAwesome, Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
+import { useTheme } from "../ThemeContext";
 
 export default function EditarResponsavel({ navigation }) {
+  const { darkMode } = useTheme();
   const [email, setEmail] = useState("miguel@gmail.com");
   const [telefone, setTelefone] = useState("+55 12 99684-3436");
   const [novaSenha, setNovaSenha] = useState("");
   const [confirmarSenha, setConfirmarSenha] = useState("");
 
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <View style={styles.container}>
+    <SafeAreaView
+      style={[
+        styles.safeArea,
+        { backgroundColor: darkMode ? "#000" : "#e9e9eb" },
+      ]}
+    >
+      <View
+        style={[styles.container, { backgroundColor: darkMode ? "#000" : "#e9e9eb" }]}
+      >
         <LinearGradient
           colors={["#000000", "#780b47"]}
           start={{ x: 0, y: 0 }}
@@ -32,7 +39,7 @@ export default function EditarResponsavel({ navigation }) {
         >
           <TouchableOpacity
             style={styles.backButton}
-            onPress={() => navigation.navigate("PerfilResponsavel")}
+             onPress={() => navigation.goBack()}
           >
             <FontAwesome name="arrow-left" size={24} color="#fff" />
           </TouchableOpacity>
@@ -44,56 +51,91 @@ export default function EditarResponsavel({ navigation }) {
           contentContainerStyle={styles.scrollContent}
         >
           <View style={styles.avatarContainer}>
-            <View style={styles.avatarWrapper}>
-              <Ionicons name="person" size={100} color="#000000ff" />
+            <View
+              style={[
+                styles.avatarWrapper,
+                { borderColor: darkMode ? "#780b47" : "#780b47", backgroundColor: darkMode ? "#1a1a1a" : "#fff" },
+              ]}
+            >
+              <Ionicons
+                name="person"
+                size={100}
+                color={darkMode ? "#fff" : "#000000ff"}
+              />
               <TouchableOpacity style={styles.editIcon}>
                 <FontAwesome name="pencil" size={18} color="#fff" />
               </TouchableOpacity>
             </View>
-             <Text style={styles.nomeResponsavel}>Miguel</Text>
+            <Text
+              style={[
+                styles.nomeResponsavel,
+                { color: darkMode ? "#fff" : "#333" },
+              ]}
+            >
+              Miguel
+            </Text>
           </View>
 
-          <View style={styles.inputContainer}>
-            <Text style={styles.label}>EMAIL</Text>
+          <View
+            style={[
+              styles.inputContainer,
+              { backgroundColor: darkMode ? "#1a1a1a" : "#fff" },
+            ]}
+          >
+            <Text
+              style={[styles.label, { color: darkMode ? "#ffffffff" : "#555" }]}
+            >
+              EMAIL
+            </Text>
             <TextInput
-              style={styles.input}
+              style={[styles.input, { color: darkMode ? "#fff" : "#333", borderBottomColor: darkMode ? "#555" : "#929292ff" }]}
               value={email}
               onChangeText={setEmail}
               keyboardType="email-address"
               placeholder="Seu email"
-              placeholderTextColor="#888"
+              placeholderTextColor={darkMode ? "#888" : "#888"}
             />
 
-            <Text style={styles.label}>TELEFONE</Text>
+            <Text
+              style={[styles.label, { color: darkMode ? "#ffffffff" : "#555" }]}
+            >
+              TELEFONE
+            </Text>
             <TextInput
-              style={styles.input}
+              style={[styles.input, { color: darkMode ? "#fff" : "#333", borderBottomColor: darkMode ? "#555" : "#929292ff" }]}
               value={telefone}
               onChangeText={setTelefone}
               keyboardType="phone-pad"
               placeholder="Seu telefone"
-              placeholderTextColor="#888"
+              placeholderTextColor={darkMode ? "#888" : "#888"}
             />
 
-            <Text style={styles.label}>NOVA SENHA</Text>
+            <Text
+              style={[styles.label, { color: darkMode ? "#ffffffff" : "#555" }]}
+            >
+              NOVA SENHA
+            </Text>
             <TextInput
-              style={styles.input}
+              style={[styles.input, { color: darkMode ? "#fff" : "#333", borderBottomColor: darkMode ? "#555" : "#929292ff" }]}
               value={novaSenha}
               onChangeText={setNovaSenha}
               secureTextEntry
               placeholder="Digite sua nova senha"
-              placeholderTextColor="#888"
+              placeholderTextColor={darkMode ? "#888" : "#888"}
             />
 
-            <Text style={styles.label}>
+            <Text
+              style={[styles.label, { color: darkMode ? "#ffffffff" : "#555" }]}
+            >
               CONFIRMAR NOVA SENHA
             </Text>
             <TextInput
-              style={styles.input}
+              style={[styles.input, { color: darkMode ? "#fff" : "#333", borderBottomColor: darkMode ? "#555" : "#929292ff" }]}
               value={confirmarSenha}
               onChangeText={setConfirmarSenha}
               secureTextEntry
               placeholder="Confirme sua nova senha"
-              placeholderTextColor="#888"
+              placeholderTextColor={darkMode ? "#888" : "#888"}
             />
           </View>
 
@@ -112,12 +154,10 @@ export default function EditarResponsavel({ navigation }) {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: "#e9e9ebff",
     paddingTop: Platform.OS === "android" ? StatusBar.currentHeight : 0,
   },
   container: {
     flex: 1,
-    backgroundColor: "#e9e9ebff", 
   },
   header: {
     marginTop: -10,
@@ -154,7 +194,6 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     borderWidth: 3,
-    borderColor: "#780b47",
     marginBottom: 10,
     elevation: 5,
     shadowColor: "#000",
@@ -174,14 +213,12 @@ const styles = StyleSheet.create({
   },
   nomeResponsavel: {
     fontSize: 28,
-    color: "#333",
     fontWeight: "bold",
     marginBottom: 5,
   },
   inputContainer: {
     marginHorizontal: 25,
     marginTop: 20,
-    backgroundColor: "#fff",
     borderRadius: 15,
     padding: 20,
     elevation: 3,
@@ -194,25 +231,22 @@ const styles = StyleSheet.create({
     marginTop: 15,
     fontSize: 13,
     fontWeight: "bold",
-    color: "#555",
     marginBottom: 8,
     textTransform: "uppercase",
   },
   input: {
     height: 45,
-    borderBottomWidth: 1, 
-    borderBottomColor: "#929292ff", 
-    borderRadius: 0, 
-    paddingHorizontal: 0, 
-    backgroundColor: "transparent", 
-    color: "#333",
+    borderBottomWidth: 1,
+    borderRadius: 0,
+    paddingHorizontal: 0,
+    backgroundColor: "transparent",
     fontSize: 16,
   },
   saveButton: {
     backgroundColor: "#780b47",
     paddingVertical: 15,
-    marginHorizontal: 25,
-    borderRadius: 15,
+    marginHorizontal: 120,
+    borderRadius: 28,
     alignItems: "center",
     marginTop: 30,
     marginBottom: 20,
@@ -229,4 +263,3 @@ const styles = StyleSheet.create({
     textTransform: "uppercase",
   },
 });
-

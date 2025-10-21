@@ -11,16 +11,26 @@ import {
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { FontAwesome, Ionicons } from "@expo/vector-icons";
+import { useTheme } from "../ThemeContext";
 
 export default function GerenciarCriancas({ navigation }) {
+  const { darkMode } = useTheme();
+
   const criancas = [
     { id: 1, nome: "Lucas", escola: "SESI-Caçapava", alerta: true },
     { id: 2, nome: "Sabrina", escola: "Colégio Cecília", alerta: false },
   ];
 
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <View style={styles.container}>
+    <SafeAreaView
+      style={[
+        styles.safeArea,
+        { backgroundColor: darkMode ? "#000" : "#e9e9eb" },
+      ]}
+    >
+      <View
+        style={[styles.container, { backgroundColor: darkMode ? "#000" : "#e9e9eb" }]}
+      >
         <LinearGradient
           colors={["#000000", "#780b47"]}
           start={{ x: 0, y: 0 }}
@@ -38,12 +48,36 @@ export default function GerenciarCriancas({ navigation }) {
 
         <ScrollView contentContainerStyle={styles.scrollContainer}>
           {criancas.map((item) => (
-            <View key={item.id} style={styles.childCard}>
+            <View
+              key={item.id}
+              style={[
+                styles.childCard,
+                { backgroundColor: darkMode ? "#1a1a1a" : "#fff" },
+              ]}
+            >
               <View style={styles.childInfo}>
-                <Ionicons name="person-circle-outline" size={60} color="#3f3d3dff" />
+                <Ionicons
+                  name="person-circle-outline"
+                  size={60}
+                  color={darkMode ? "#fff" : "#3f3d3dff"}
+                />
                 <View style={styles.childTextContainer}>
-                  <Text style={styles.childName}>{item.nome}</Text>
-                  <Text style={styles.childSchool}>{item.escola}</Text>
+                  <Text
+                    style={[
+                      styles.childName,
+                      { color: darkMode ? "#fff" : "#333" },
+                    ]}
+                  >
+                    {item.nome}
+                  </Text>
+                  <Text
+                    style={[
+                      styles.childSchool,
+                      { color: darkMode ? "#aaa" : "#666" },
+                    ]}
+                  >
+                    {item.escola}
+                  </Text>
                 </View>
               </View>
 
@@ -52,14 +86,18 @@ export default function GerenciarCriancas({ navigation }) {
                   <FontAwesome
                     name="exclamation-triangle"
                     size={25}
-                    color="#5b133aff" 
+                    color={darkMode ? "#be1a74ff" : "#5b133aff"}
                     style={{ marginRight: 15 }}
                   />
                 )}
                 <TouchableOpacity
                   onPress={() => navigation.navigate("PerfilCrianca")}
                 >
-                  <FontAwesome name="info-circle" size={25} color="#161214ff" /> 
+                  <FontAwesome
+                    name="info-circle"
+                    size={25}
+                    color={darkMode ? "#ffffffff" : "#161214ff"}
+                  />
                 </TouchableOpacity>
               </View>
             </View>
@@ -83,12 +121,10 @@ export default function GerenciarCriancas({ navigation }) {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: "#e9e9ebff",
     paddingTop: Platform.OS === "android" ? StatusBar.currentHeight : 0,
   },
   container: {
     flex: 1,
-    backgroundColor: "#e9e9ebff",
   },
   header: {
     marginTop: -10,
@@ -119,7 +155,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginHorizontal: 20,
     padding: 15,
-    backgroundColor: "#fff",
     borderRadius: 15,
     marginBottom: 15,
     elevation: 3,
@@ -138,11 +173,9 @@ const styles = StyleSheet.create({
   childName: {
     fontSize: 20,
     fontWeight: "bold",
-    color: "#333",
   },
   childSchool: {
     fontSize: 15,
-    color: "#666",
     marginTop: 2,
   },
   iconContainer: {
@@ -152,8 +185,8 @@ const styles = StyleSheet.create({
   addButton: {
     backgroundColor: "#780b47",
     paddingVertical: 15,
-    marginHorizontal: 60,
-    borderRadius: 15,
+    marginHorizontal: 70,
+    borderRadius: 28,
     alignItems: "center",
     marginTop: 30,
     elevation: 5,
@@ -174,4 +207,3 @@ const styles = StyleSheet.create({
     textTransform: "uppercase",
   },
 });
-

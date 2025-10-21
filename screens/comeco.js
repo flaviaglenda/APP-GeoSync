@@ -52,10 +52,10 @@ const styles = StyleSheet.create({
   loginButton: {
     backgroundColor: "#AE156B",
     paddingVertical: 12,
-    paddingHorizontal: 60,
-    borderRadius: 18,
+    paddingHorizontal: 53,
+    borderRadius: 28,
     marginBottom: 15,
-    marginTop: 150,
+    marginTop: 100,
   },
   loginText: {
     color: "#fff",
@@ -66,8 +66,8 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: "#AE156B",
     paddingVertical: 12,
-    paddingHorizontal: 42,
-    borderRadius: 18,
+    paddingHorizontal: 32,
+    borderRadius: 28,
     marginBottom: 15,
   },
   registerText: {

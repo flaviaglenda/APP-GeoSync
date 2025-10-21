@@ -79,7 +79,7 @@ export default function LoginScreen({ navigation }) {
         onPress={() => navigation.replace("Login")}
 
         >
-          <Text style={styles.loginText}>ENTRAR</Text>
+          <Text style={styles.loginText}>CADASTRAR</Text>
         </TouchableOpacity>
 
         <Text style={styles.registerText}>
@@ -145,13 +145,13 @@ const styles = StyleSheet.create({
   },
   forgotText: {
     color: "#ccc",
-    fontSize: 17,
+    fontSize: 15,
   },
   loginButton: {
     backgroundColor: "#ffffffff",
-    width: 180,
+    width: 150,
     paddingVertical: 15,
-    borderRadius: 20,
+    borderRadius: 28,
     alignItems: "center",
     marginBottom: 20,
   },
@@ -161,7 +161,7 @@ const styles = StyleSheet.create({
   },
   registerText: {
     color: "#fff",
-    fontSize: 18,
+    fontSize: 15,
   },
   registerLink: {
     fontWeight: "bold",

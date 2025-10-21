@@ -13,15 +13,24 @@ import {
 import { FontAwesome } from "@expo/vector-icons";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
+import { useTheme } from "../ThemeContext";
 
 export default function PerfilCrianca({ navigation }) {
+  const { darkMode } = useTheme();
   const [escola, setEscola] = useState("SESI CAÇAPAVA");
   const [turma, setTurma] = useState("3° Ano fundamental");
   const [periodo, setPeriodo] = useState("07:00 - 15:30h");
 
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <View style={styles.container}>
+    <SafeAreaView
+      style={[
+        styles.safeArea,
+        { backgroundColor: darkMode ? "#000" : "#e9e9eb" },
+      ]}
+    >
+      <View
+        style={[styles.container, { backgroundColor: darkMode ? "#000" : "#e9e9eb" }]}
+      >
         <LinearGradient
           colors={["#000000", "#780b47"]}
           start={{ x: 0, y: 0 }}
@@ -42,45 +51,74 @@ export default function PerfilCrianca({ navigation }) {
           contentContainerStyle={styles.scrollContent}
         >
           <View style={styles.avatarContainer}>
-            <View style={styles.avatarWrapper}>
-              <Ionicons name="person" size={100} color="#000000ff" />
+            <View
+              style={[
+                styles.avatarWrapper,
+                { borderColor: darkMode ? "#881052ff" : "#780b47" },
+              ]}
+            >
+              <Ionicons
+                name="person"
+                size={100}
+                color={darkMode ? "#fff" : "#000000ff"}
+              />
               <TouchableOpacity style={styles.editIcon}>
                 <FontAwesome name="pencil" size={18} color="#fff" />
               </TouchableOpacity>
             </View>
-            <Text style={styles.nomeCrianca}>Lucas</Text>
-            <Text style={styles.idadeCrianca}>7 anos</Text>
+            <Text style={[styles.nomeCrianca, { color: darkMode ? "#fff" : "#333" }]}>
+              Lucas
+            </Text>
+            <Text style={[styles.idadeCrianca, { color: darkMode ? "#ccc" : "#666" }]}>
+              7 anos
+            </Text>
           </View>
 
-          <View style={styles.inputContainer}>
-            <Text style={styles.label}>ESCOLA</Text>
+          <View
+            style={[
+              styles.inputContainer,
+              { backgroundColor: darkMode ? "#1a1a1a" : "#fff" },
+            ]}
+          >
+            <Text style={[styles.label, { color: darkMode ? "#ffffffff" : "#555" }]}>
+              ESCOLA
+            </Text>
             <TextInput
-              style={styles.input}
+              style={[styles.input, { color: darkMode ? "#fff" : "#333", borderBottomColor: darkMode ? "#555" : "#929292ff" }]}
               value={escola}
               onChangeText={setEscola}
               placeholder="Nome da Escola"
-              placeholderTextColor="#888"
+              placeholderTextColor={darkMode ? "#888" : "#888"}
             />
-            <Text style={styles.label}>TURMA</Text>
+
+            <Text style={[styles.label, { color: darkMode ? "#ffffffff" : "#555" }]}>
+              TURMA
+            </Text>
             <TextInput
-              style={styles.input}
+              style={[styles.input, { color: darkMode ? "#fff" : "#333", borderBottomColor: darkMode ? "#555" : "#929292ff" }]}
               value={turma}
               onChangeText={setTurma}
               placeholder="Turma"
-              placeholderTextColor="#888"
+              placeholderTextColor={darkMode ? "#888" : "#888"}
             />
-            <Text style={styles.label}>PERÍODO</Text>
+
+            <Text style={[styles.label, { color: darkMode ? "#ffffffff" : "#555" }]}>
+              PERÍODO ESCOLAR
+            </Text>
             <TextInput
-              style={styles.input}
+              style={[styles.input, { color: darkMode ? "#fff" : "#333", borderBottomColor: darkMode ? "#555" : "#929292ff" }]}
               value={periodo}
               onChangeText={setPeriodo}
               placeholder="Período"
-              placeholderTextColor="#888"
+              placeholderTextColor={darkMode ? "#888" : "#888"}
             />
           </View>
 
           <TouchableOpacity
-            style={styles.saveButton}
+            style={[
+              styles.saveButton,
+              { backgroundColor: darkMode ? "#780b47" : "#780b47" },
+            ]}
             onPress={() => navigation.goBack()}
           >
             <Text style={styles.saveButtonText}>SALVAR</Text>
@@ -94,12 +132,10 @@ export default function PerfilCrianca({ navigation }) {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: "#e9e9ebff",
     paddingTop: Platform.OS === "android" ? StatusBar.currentHeight : 0,
   },
   container: {
     flex: 1,
-    backgroundColor: "#e9e9ebff",
   },
   header: {
     marginTop: -10,
@@ -136,7 +172,6 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     borderWidth: 3,
-    borderColor: "#780b47",
     marginBottom: 10,
     elevation: 5,
     shadowColor: "#000",
@@ -156,19 +191,16 @@ const styles = StyleSheet.create({
   },
   nomeCrianca: {
     fontSize: 28,
-    color: "#333",
     fontWeight: "bold",
     marginBottom: 5,
   },
   idadeCrianca: {
     fontSize: 18,
-    color: "#666",
     fontWeight: "normal",
   },
   inputContainer: {
     marginHorizontal: 25,
     marginTop: 20,
-    backgroundColor: "#fff",
     borderRadius: 15,
     padding: 20,
     elevation: 3,
@@ -178,28 +210,24 @@ const styles = StyleSheet.create({
     shadowRadius: 2.22,
   },
   label: {
-     marginTop: 15,
+    marginTop: 15,
     fontSize: 13,
     fontWeight: "bold",
-    color: "#555",
     marginBottom: 8,
     textTransform: "uppercase",
   },
   input: {
-     height: 45,
-    borderBottomWidth: 1, 
-    borderBottomColor: "#929292ff", 
-    borderRadius: 0, 
-    paddingHorizontal: 0, 
-    backgroundColor: "transparent", 
-    color: "#333",
+    height: 45,
+    borderBottomWidth: 1,
+    borderRadius: 0,
+    paddingHorizontal: 0,
+    backgroundColor: "transparent",
     fontSize: 16,
   },
   saveButton: {
-    backgroundColor: "#780b47",
     paddingVertical: 15,
     marginHorizontal: 130,
-    borderRadius: 15,
+    borderRadius: 28,
     alignItems: "center",
     marginTop: 30,
     marginBottom: 20,

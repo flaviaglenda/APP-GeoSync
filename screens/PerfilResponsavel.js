@@ -1,5 +1,4 @@
-
-import React, { useState } from "react";
+import React from "react";
 import {
   View,
   Text,
@@ -12,13 +11,16 @@ import {
 } from "react-native";
 import { Ionicons, MaterialIcons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
+import { useTheme } from "../ThemeContext"; 
 
 export default function PerfilResponsavel({ navigation }) {
-  const [darkMode, setDarkMode] = useState(false);
+  const { darkMode, toggleTheme, theme } = useTheme(); 
 
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <View style={styles.container}>
+    <SafeAreaView
+      style={[styles.safeArea, { backgroundColor: darkMode ? "#000" : theme.colors.background }]}
+    >
+      <View style={[styles.container, { backgroundColor: darkMode ? "#000" : theme.colors.background }]}>
         <LinearGradient
           colors={["#000000", "#780b47"]}
           start={{ x: 0, y: 0 }}
@@ -29,43 +31,62 @@ export default function PerfilResponsavel({ navigation }) {
         </LinearGradient>
 
         <View style={styles.avatarContainer}>
-          <View style={styles.avatarWrapper}>
-            <Ionicons name="person" size={126} color="#000000ff" />
+          <View
+            style={[
+              styles.avatarWrapper,
+              { borderColor: "#722044ff" }, 
+            ]}
+          >
+            <Ionicons
+              name="person"
+              size={126}
+              color={darkMode ? "#fff" : "#000"}
+            />
           </View>
         </View>
 
-        <Text style={styles.sectionTitle}>INFORMAÇÕES GERAIS</Text>
+        <View style={styles.cardsContainer}>
+          <TouchableOpacity
+            style={[styles.optionCard, { backgroundColor: "#5f0738" }]} 
+            onPress={() => navigation.navigate("EditarResponsavel")}
+          >
+            <MaterialIcons name="edit" size={28} color="#fff" />
+            <Text style={[styles.optionText, { color: "#fff" }]}>Editar perfil</Text>
+            <MaterialIcons
+              name="keyboard-arrow-right"
+              size={24}
+              color="#d0d0d0"
+              style={styles.arrowIcon}
+            />
+          </TouchableOpacity>
 
-        <TouchableOpacity
-          style={styles.optionCard}
-          onPress={() => navigation.navigate("EditarResponsavel")}
-        >
-          <MaterialIcons name="edit" size={28} color="#ffffffff" />
-          <Text style={styles.optionText}>Editar perfil</Text>
-          <MaterialIcons name="keyboard-arrow-right" size={24} color="#d0d0d0ff" style={styles.arrowIcon} />
-        </TouchableOpacity>
+          <View style={[styles.optionCard, { backgroundColor: "#5f0738" }]}> 
+            <Ionicons name="moon" size={28} color="#fff" />
+            <Text style={[styles.optionText, { color: "#fff" }]}>Modo escuro</Text>
+            <Switch
+              value={darkMode}
+              onValueChange={toggleTheme} 
+              trackColor={{ false: "#e5e2e2", true: "#9e9c9c" }}
+              thumbColor={darkMode ? "#f9f4f6ff" : "#f4f3f4"} 
+              ios_backgroundColor="#3e3e3e"
+              style={styles.switchToggle}
+            />
+          </View>
 
-        <View style={styles.optionCard}>
-          <Ionicons name="moon" size={28} color="#ffffffff" />
-          <Text style={styles.optionText}>Modo escuro</Text>
-          <Switch
-            value={darkMode}
-            onValueChange={setDarkMode}
-            trackColor={{ false: "#e5e2e2ff", true: "#9e9c9cff" }}
-            thumbColor={darkMode ? "#f5dd4b" : "#f4f3f4"}
-            ios_backgroundColor="#3e3e3e"
-            style={styles.switchToggle}
-          />
+          <TouchableOpacity
+            style={[styles.optionCard, { backgroundColor: "#5f0738" }]}
+            onPress={() => navigation.navigate("GerenciarCrianca")}
+          >
+            <Ionicons name="happy" size={28} color="#fff" />
+            <Text style={[styles.optionText, { color: "#fff" }]}>Gerenciar criança</Text>
+            <MaterialIcons
+              name="keyboard-arrow-right"
+              size={24}
+              color="#d0d0d0"
+              style={styles.arrowIcon}
+            />
+          </TouchableOpacity>
         </View>
-
-        <TouchableOpacity
-          style={styles.optionCard}
-          onPress={() => navigation.navigate("GerenciarCrianca")}
-        >
-          <Ionicons name="happy" size={28} color="#ffffffff" />
-          <Text style={styles.optionText}>Gerenciar criança</Text>
-          <MaterialIcons name="keyboard-arrow-right" size={24} color="#d0d0d0ff" style={styles.arrowIcon} />
-        </TouchableOpacity>
       </View>
     </SafeAreaView>
   );
@@ -74,12 +95,10 @@ export default function PerfilResponsavel({ navigation }) {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: "#e9e9ebff",
     paddingTop: Platform.OS === "android" ? StatusBar.currentHeight : 0,
   },
   container: {
     flex: 1,
-    backgroundColor: "#e9e9ebff", 
   },
   header: {
     marginTop: -10,
@@ -107,7 +126,6 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     borderWidth: 3,
-    borderColor: "#780b47",
     marginBottom: 10,
     elevation: 5,
     shadowColor: "#000",
@@ -115,23 +133,16 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
   },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: "bold",
-    color: "#333333ff",
-    marginLeft: 20,
-    marginBottom: 15,
-    marginTop: 10,
-    textTransform: "uppercase",
+  cardsContainer: {
+    marginTop: 14,
   },
   optionCard: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#5b133aff",
     marginHorizontal: 20,
     paddingVertical: 15,
     paddingHorizontal: 20,
-    borderRadius: 15,
+    borderRadius: 30,
     marginBottom: 10,
     elevation: 3,
     shadowColor: "#000",
@@ -142,14 +153,12 @@ const styles = StyleSheet.create({
   optionText: {
     marginLeft: 15,
     fontSize: 18,
-    color: "#ffffffff",
-    flex: 1, 
+    flex: 1,
   },
   switchToggle: {
-    transform: [{ scaleX: 0.9 }, { scaleY: 0.9 }], 
+    transform: [{ scaleX: 0.9 }, { scaleY: 0.9 }],
   },
   arrowIcon: {
     marginLeft: 10,
   },
 });
-

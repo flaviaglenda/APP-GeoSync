@@ -5,54 +5,36 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  Image,
 } from "react-native";
 import { FontAwesome5 } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useIsFocused } from "@react-navigation/native";
+import { useTheme } from "../ThemeContext"; // <<< pega tema global
 
 export default function Notificacoes() {
+  const { darkMode } = useTheme(); // <<< pega darkMode global
   const [notificacoes, setNotificacoes] = useState([]);
   const [limpado, setLimpado] = useState(false);
   const isFocused = useIsFocused();
 
   const notificacoesIniciais = [
-    {
-      id: 1,
-      icon: "exclamation-triangle",
-      title: "Botão de pânico pressionado.",
-      time: "Hoje, 19:00h",
-    },
-    {
-      id: 2,
-      icon: "exclamation-triangle",
-      title: "Saída do perímetro seguro.",
-      time: "Ontem, 16:30h",
-    },
-    {
-      id: 3,
-      icon: "battery-quarter",
-      title: "Bateria baixa.",
-      time: "Ontem, 19h",
-    },
+    { id: 1, icon: "exclamation-triangle", title: "Botão de pânico pressionado.", time: "Hoje, 19:00h" },
+    { id: 2, icon: "exclamation-triangle", title: "Saída do perímetro seguro.", time: "Ontem, 16:30h" },
+    { id: 3, icon: "battery-quarter", title: "Bateria baixa.", time: "Ontem, 19h" },
   ];
 
   useEffect(() => {
-    if (isFocused && !limpado) {
-      setNotificacoes(notificacoesIniciais);
-    }
-    if (isFocused && limpado) {
-      setLimpado(false); 
-    }
+    if (isFocused && !limpado) setNotificacoes(notificacoesIniciais);
+    if (isFocused && limpado) setLimpado(false);
   }, [isFocused]);
 
   const limparNotificacoes = () => {
     setNotificacoes([]);
-    setLimpado(true); 
+    setLimpado(true);
   };
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: darkMode ? "#000" : "#e9e9eb" }]}>
       <LinearGradient
         colors={["#000000ff", "#780b47"]}
         start={{ x: 0, y: 0 }}
@@ -63,30 +45,39 @@ export default function Notificacoes() {
       </LinearGradient>
 
       <TouchableOpacity onPress={limparNotificacoes}>
-        <Text style={styles.limparText}>Limpar notificações</Text>
+        <Text style={[styles.limparText, { color: darkMode ? "#f61f7c" : "#6d1232ff" }]}>
+          Limpar notificações
+        </Text>
       </TouchableOpacity>
 
       {notificacoes.length === 0 ? (
         <View style={styles.semNotifContainer}>
-          <Text style={styles.semNotifText}>SEM NOTIFICAÇÕES</Text>
-          <Image
-            source={require("../src/assets/semnot_img.png")}
-            style={styles.semNotifImage}
-          />
+          <Text style={[styles.semNotifText, { color: darkMode ? "#fff" : "#333" }]}>
+            SEM NOTIFICAÇÕES
+          </Text>
         </View>
       ) : (
         <ScrollView style={styles.scrollContainer}>
           {notificacoes.map((item) => (
-            <View key={item.id} style={styles.card}>
+            <View
+              key={item.id}
+              style={[
+                styles.card,
+                {
+                  backgroundColor: darkMode ? "#1a1a1a" : "#fff",
+                  borderColor: darkMode ? "#333" : "#ccc",
+                },
+              ]}
+            >
               <FontAwesome5
                 name={item.icon}
                 size={24}
-                color="#780b47"
+                color={darkMode ? "#f61f7c" : "#780b47"}
                 style={styles.icon}
               />
               <View style={styles.textContainer}>
-                <Text style={styles.title}>{item.title}</Text>
-                <Text style={styles.time}>{item.time}</Text>
+                <Text style={[styles.title, { color: darkMode ? "#fff" : "#333" }]}>{item.title}</Text>
+                <Text style={[styles.time, { color: darkMode ? "#ddd" : "#000" }]}>{item.time}</Text>
               </View>
             </View>
           ))}
@@ -99,7 +90,6 @@ export default function Notificacoes() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#e9e9ebff",
   },
   header: {
     marginTop: -10,
@@ -117,9 +107,8 @@ const styles = StyleSheet.create({
     color: "#fff",
   },
   limparText: {
-    marginTop: 30,
-    marginLeft: 270,
-    color: "#6d1232ff",
+    marginTop: 20,
+    marginLeft: 260,
     fontSize: 14,
     marginBottom: 9,
   },
@@ -130,11 +119,9 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     borderWidth: 1,
-    borderColor: "#ccc",
-    borderRadius: 10,
+    borderRadius: 30,
     padding: 20,
     marginBottom: 15,
-    backgroundColor: "#fff",
     shadowColor: "#000",
     shadowOpacity: 0.1,
     shadowOffset: { width: 0, height: 2 },
@@ -149,28 +136,19 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 20,
-    color: "#333",
   },
   time: {
     fontSize: 14,
-    color: "#000000ff",
     marginTop: 5,
-      fontWeight: "110",
   },
   semNotifContainer: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    marginTop: -180,
+    marginTop: -120,
   },
   semNotifText: {
     fontSize: 32,
-     fontWeight: "110",
-    marginBottom: 20,
-    color: "#333",
-  },
-  semNotifImage: {
-    width: 300,
-    height: 300,
+    fontWeight: "bold",
   },
 });
