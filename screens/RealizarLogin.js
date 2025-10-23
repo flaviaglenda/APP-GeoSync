@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   View,
   Text,
@@ -8,19 +8,71 @@ import {
   StyleSheet,
   KeyboardAvoidingView,
   Platform,
-  Dimensions
+  Dimensions,
+  Alert
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { FontAwesome } from "@expo/vector-icons";
+import { supabase } from "../supabaseConfig";
 
 export default function LoginScreen({ navigation }) {
   const { height, width } = Dimensions.get("screen");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState(null);
 
   const handleBack = () => {
     if (navigation.canGoBack()) {
       navigation.goBack();
     } else {
       navigation.navigate("Comeco");
+    }
+  };
+
+  const handleLogin = async () => {
+    if (!email || !password) {
+      setMessage({ type: 'error', text: 'Por favor, preencha todos os campos.' });
+      return;
+    }
+
+    setLoading(true);
+    setMessage(null);
+
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      if (data?.user) {
+        // Buscar dados do usuário na tabela users/profiles se necessário
+        const { data: userData, error: userError } = await supabase
+          .from('users')
+          .select('*')
+          .eq('auth_id', data.user.id)
+          .single();
+
+        if (userError) {
+          console.warn('Erro ao buscar dados do usuário:', userError.message);
+        }
+
+        // Navegar para a tela inicial
+        navigation.replace('Main');
+      }
+    } catch (error) {
+      setMessage({
+        type: 'error',
+        text: error.message === 'Invalid login credentials'
+          ? 'Email ou senha incorretos.'
+          : 'Erro ao fazer login. Tente novamente.'
+      });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -45,13 +97,18 @@ export default function LoginScreen({ navigation }) {
         <View style={styles.inputContainer}>
           <Text style={styles.label}>EMAIL:</Text>
           <TextInput
+            value={email}
+            onChangeText={setEmail}
             style={[styles.input, { width: width * 0.8 }]}
             placeholderTextColor="#ccc"
             keyboardType="email-address"
+            autoCapitalize="none"
           />
 
           <Text style={styles.label}>SENHA:</Text>
           <TextInput
+            value={password}
+            onChangeText={setPassword}
             style={styles.input}
             placeholderTextColor="#ccc"
             secureTextEntry={true}
@@ -65,11 +122,18 @@ export default function LoginScreen({ navigation }) {
           </TouchableOpacity>
         </View>
 
+        {message && (
+          <Text style={[styles.messageText, { color: message.type === 'error' ? '#ff6666' : '#88ff88' }]}>
+            {message.text}
+          </Text>
+        )}
+
         <TouchableOpacity
-          style={styles.loginButton}
-          onPress={() => navigation.navigate("Main")}
+          style={[styles.loginButton, loading ? { opacity: 0.7 } : null]}
+          onPress={handleLogin}
+          disabled={loading}
         >
-          <Text style={styles.loginText}>ENTRAR</Text>
+          <Text style={styles.loginText}>{loading ? 'ENTRANDO...' : 'ENTRAR'}</Text>
         </TouchableOpacity>
 
         <Text style={styles.registerText}>
@@ -87,6 +151,11 @@ export default function LoginScreen({ navigation }) {
 }
 
 const styles = StyleSheet.create({
+  messageText: {
+    fontSize: 14,
+    marginBottom: 15,
+    textAlign: 'center',
+  },
   container: {
     flex: 1,
     justifyContent: "center",

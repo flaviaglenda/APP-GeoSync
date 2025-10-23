@@ -15,6 +15,7 @@ import {
 import { createStackNavigator } from "@react-navigation/stack";
 import { FontAwesome5 } from "@expo/vector-icons";
 
+
 import Comeco from "./screens/comeco";
 import Login from "./screens/RealizarLogin";
 import Cadastrar from "./screens/RealizarCadastro";
@@ -29,7 +30,16 @@ import GerenciarCrianca from "./screens/GerenciarCrianca";
 import PerfilCrianca from "./screens/PerfilCrianca";
 import AdicionarCrianca from "./screens/AdicionarCrianca";
 
-import { ThemeProvider } from "./ThemeContext"; 
+import { ThemeProvider } from "./ThemeContext";
+import * as Notifications from "expo-notifications";
+
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldShowAlert: true,  
+    shouldPlaySound: false, 
+    shouldSetBadge: false,    
+  }),
+});
 
 const Drawer = createDrawerNavigator();
 const Stack = createStackNavigator();
@@ -174,7 +184,7 @@ function CustomDrawerContent(props) {
 
 export default function App() {
   return (
-    <ThemeProvider> 
+    <ThemeProvider>
       <NavigationContainer>
         <Stack.Navigator screenOptions={{ headerShown: false }}>
           <Stack.Screen name="Comeco" component={Comeco} />
@@ -191,7 +201,7 @@ export default function App() {
 const styles = StyleSheet.create({
   drawerContent: {
     flex: 1,
-    backgroundColor: "#000", 
+    backgroundColor: "#000",
     paddingTop: 20,
   },
   closeBtn: {
