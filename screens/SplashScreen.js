@@ -5,7 +5,7 @@ import { LinearGradient } from "expo-linear-gradient";
 export default function SplashScreen({ navigation }) {
   useEffect(() => {
     const timer = setTimeout(() => {
-      navigation.replace("paginainicial");
+      navigation.navigate("Comeco"); 
     }, 3000);
 
     return () => clearTimeout(timer);
@@ -17,7 +17,7 @@ export default function SplashScreen({ navigation }) {
       style={styles.container}
     >
       <Image
-        source={require("./src/assets/8.png")}
+        source={require("../src/assets/8.png")}
         style={styles.logo}
         resizeMode="contain"
       />

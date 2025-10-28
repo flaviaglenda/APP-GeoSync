@@ -13,10 +13,10 @@ import {
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { FontAwesome } from "@expo/vector-icons";
-import { supabase } from "../supabaseConfig";
+// import { supabase } from "../supabaseConfig"; // 🔒 Comentado (sem banco)
 
 export default function LoginScreen({ navigation }) {
-  const { height, width } = Dimensions.get("screen");
+  const { width } = Dimensions.get("screen");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -30,9 +30,10 @@ export default function LoginScreen({ navigation }) {
     }
   };
 
+  // 🚀 Login fixo
   const handleLogin = async () => {
     if (!email || !password) {
-      setMessage({ type: 'error', text: 'Por favor, preencha todos os campos.' });
+      setMessage({ type: "error", text: "Por favor, preencha todos os campos." });
       return;
     }
 
@@ -40,17 +41,28 @@ export default function LoginScreen({ navigation }) {
     setMessage(null);
 
     try {
+      // 💬 
+      if (email === "lucas@l.com" && password === "1234") {
+      
+        Alert.alert("Sucesso", "Login realizado com sucesso!");
+        navigation.replace("Main");
+      } else {
+       
+        setMessage({
+          type: "error",
+          text: "Email ou senha incorretos."
+        });
+      }
+
+      /* 🔒 Código original com Supabase (comentado)
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
-      if (error) {
-        throw error;
-      }
+      if (error) throw error;
 
       if (data?.user) {
-        // Buscar dados do usuário na tabela users/profiles se necessário
         const { data: userData, error: userError } = await supabase
           .from('users')
           .select('*')
@@ -61,15 +73,13 @@ export default function LoginScreen({ navigation }) {
           console.warn('Erro ao buscar dados do usuário:', userError.message);
         }
 
-        // Navegar para a tela inicial
         navigation.replace('Main');
       }
+      */
     } catch (error) {
       setMessage({
-        type: 'error',
-        text: error.message === 'Invalid login credentials'
-          ? 'Email ou senha incorretos.'
-          : 'Erro ao fazer login. Tente novamente.'
+        type: "error",
+        text: "Erro ao fazer login. Tente novamente."
       });
     } finally {
       setLoading(false);
@@ -123,7 +133,12 @@ export default function LoginScreen({ navigation }) {
         </View>
 
         {message && (
-          <Text style={[styles.messageText, { color: message.type === 'error' ? '#ff6666' : '#88ff88' }]}>
+          <Text
+            style={[
+              styles.messageText,
+              { color: message.type === "error" ? "#ff6666" : "#88ff88" },
+            ]}
+          >
             {message.text}
           </Text>
         )}
@@ -133,7 +148,9 @@ export default function LoginScreen({ navigation }) {
           onPress={handleLogin}
           disabled={loading}
         >
-          <Text style={styles.loginText}>{loading ? 'ENTRANDO...' : 'ENTRAR'}</Text>
+          <Text style={styles.loginText}>
+            {loading ? "ENTRANDO..." : "ENTRAR"}
+          </Text>
         </TouchableOpacity>
 
         <Text style={styles.registerText}>

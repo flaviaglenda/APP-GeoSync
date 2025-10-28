@@ -159,6 +159,7 @@ const styles = StyleSheet.create({
     fontSize: 12
   },
   iconAlerta: {
+    fontSize: 30,
     position: "absolute",
     bottom: 10,
     right: 10

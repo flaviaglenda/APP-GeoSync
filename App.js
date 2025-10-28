@@ -29,15 +29,16 @@ import ManualMochila from "./screens/ManualMochila";
 import GerenciarCrianca from "./screens/GerenciarCrianca";
 import PerfilCrianca from "./screens/PerfilCrianca";
 import AdicionarCrianca from "./screens/AdicionarCrianca";
+import Splas from "./screens/SplashScreen";
 
 import { ThemeProvider } from "./ThemeContext";
 import * as Notifications from "expo-notifications";
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
-    shouldShowAlert: true,  
-    shouldPlaySound: false, 
-    shouldSetBadge: false,    
+    shouldShowAlert: true,
+    shouldPlaySound: false,
+    shouldSetBadge: false,
   }),
 });
 
@@ -167,7 +168,12 @@ function CustomDrawerContent(props) {
       <View style={styles.bottomArea}>
         <TouchableOpacity
           style={styles.logoutRow}
-          onPress={() => props.navigation.navigate("Comeco")}
+          onPress={() =>
+            props.navigation.getParent().reset({
+              index: 0,
+              routes: [{ name: "Comeco" }],
+            })
+          }
         >
           <FontAwesome5
             name="door-open"
@@ -187,6 +193,7 @@ export default function App() {
     <ThemeProvider>
       <NavigationContainer>
         <Stack.Navigator screenOptions={{ headerShown: false }}>
+          <Stack.Screen name="Splas" component={Splas} />
           <Stack.Screen name="Comeco" component={Comeco} />
           <Stack.Screen name="Login" component={Login} />
           <Stack.Screen name="Cadastrar" component={Cadastrar} />
