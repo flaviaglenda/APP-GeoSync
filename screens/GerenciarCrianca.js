@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   View,
   Text,
@@ -16,10 +16,16 @@ import { useTheme } from "../ThemeContext";
 export default function GerenciarCriancas({ navigation }) {
   const { darkMode } = useTheme();
 
-  const criancas = [
+  // agora o array é um estado pra podermos remover sem banco
+  const [criancas, setCriancas] = useState([
     { id: 1, nome: "Lucas", escola: "SESI-Caçapava", alerta: true },
     { id: 2, nome: "Sabrina", escola: "Colégio Cecília", alerta: false },
-  ];
+  ]);
+
+  // função pra remover criança
+  const removerCrianca = (id) => {
+    setCriancas((prev) => prev.filter((item) => item.id !== id));
+  };
 
   return (
     <SafeAreaView
@@ -43,7 +49,7 @@ export default function GerenciarCriancas({ navigation }) {
           >
             <FontAwesome name="arrow-left" size={24} color="#fff" />
           </TouchableOpacity>
-          <Text style={styles.headerText}>LOCALIZADORES</Text>
+          <Text style={styles.headerText}>GERENCIAR CRIANÇA</Text>
         </LinearGradient>
 
         <ScrollView contentContainerStyle={styles.scrollContainer}>
@@ -90,6 +96,8 @@ export default function GerenciarCriancas({ navigation }) {
                     style={{ marginRight: 15 }}
                   />
                 )}
+
+                {/* Ícone de informação */}
                 <TouchableOpacity
                   onPress={() => navigation.navigate("PerfilCrianca")}
                 >
@@ -97,6 +105,16 @@ export default function GerenciarCriancas({ navigation }) {
                     name="info-circle"
                     size={25}
                     color={darkMode ? "#ffffffff" : "#161214ff"}
+                    style={{ marginRight: 15 }}
+                  />
+                </TouchableOpacity>
+
+                {/* Ícone de lixeira (remover) */}
+                <TouchableOpacity onPress={() => removerCrianca(item.id)}>
+                  <FontAwesome
+                    name="trash"
+                    size={24}
+                    color={darkMode ? "#fff" : "#000"}
                   />
                 </TouchableOpacity>
               </View>

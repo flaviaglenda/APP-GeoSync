@@ -34,7 +34,8 @@
     "react-native-screens": "^4.16.0",
     "react-native-vector-icons": "^10.3.0",
     "react-native-web": "^0.21.0",
-    "expo-notifications": "~0.32.12"
+    "expo-notifications": "~0.32.12",
+    "expo-device": "~8.0.9"
   },
   "private": true
 }
