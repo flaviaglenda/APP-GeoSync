@@ -9,9 +9,11 @@ import {
   SafeAreaView,
   Platform,
   StatusBar,
+  KeyboardAvoidingView,
+  TouchableWithoutFeedback,
+  Keyboard,
 } from "react-native";
-import { FontAwesome } from "@expo/vector-icons";
-import { Ionicons } from "@expo/vector-icons";
+import { FontAwesome, Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useTheme } from "../ThemeContext";
 
@@ -28,103 +30,158 @@ export default function PerfilCrianca({ navigation }) {
         { backgroundColor: darkMode ? "#000" : "#e9e9eb" },
       ]}
     >
-      <View
-        style={[styles.container, { backgroundColor: darkMode ? "#000" : "#e9e9eb" }]}
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        keyboardVerticalOffset={Platform.OS === "ios" ? 80 : 20}
       >
-        <LinearGradient
-          colors={["#000000", "#780b47"]}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 0 }}
-          style={styles.header}
-        >
-          <TouchableOpacity
-            style={styles.backButton}
-            onPress={() => navigation.navigate("GerenciarCrianca")}
-          >
-            <FontAwesome name="arrow-left" size={24} color="#fff" />
-          </TouchableOpacity>
-          <Text style={styles.headerText}>PERFIL CRIANÇA</Text>
-        </LinearGradient>
-
-        <ScrollView
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={styles.scrollContent}
-        >
-          <View style={styles.avatarContainer}>
-            <View
-              style={[
-                styles.avatarWrapper,
-                { borderColor: darkMode ? "#881052ff" : "#780b47" },
-              ]}
-            >
-              <Ionicons
-                name="person"
-                size={100}
-                color={darkMode ? "#fff" : "#000000ff"}
-              />
-              <TouchableOpacity style={styles.editIcon}>
-                <FontAwesome name="pencil" size={18} color="#fff" />
-              </TouchableOpacity>
-            </View>
-            <Text style={[styles.nomeCrianca, { color: darkMode ? "#fff" : "#333" }]}>
-              Lucas
-            </Text>
-            <Text style={[styles.idadeCrianca, { color: darkMode ? "#ccc" : "#666" }]}>
-              7 anos
-            </Text>
-          </View>
-
+        <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
           <View
             style={[
-              styles.inputContainer,
-              { backgroundColor: darkMode ? "#1a1a1a" : "#fff" },
+              styles.container,
+              { backgroundColor: darkMode ? "#000" : "#e9e9eb" },
             ]}
           >
-            <Text style={[styles.label, { color: darkMode ? "#ffffffff" : "#555" }]}>
-              ESCOLA
-            </Text>
-            <TextInput
-              style={[styles.input, { color: darkMode ? "#fff" : "#333", borderBottomColor: darkMode ? "#555" : "#929292ff" }]}
-              value={escola}
-              onChangeText={setEscola}
-              placeholder="Nome da Escola"
-              placeholderTextColor={darkMode ? "#888" : "#888"}
-            />
+            <LinearGradient
+              colors={["#000000", "#780b47"]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              style={styles.header}
+            >
+              <TouchableOpacity
+                style={styles.backButton}
+                onPress={() => navigation.navigate("GerenciarCrianca")}
+              >
+                <FontAwesome name="arrow-left" size={24} color="#fff" />
+              </TouchableOpacity>
+              <Text style={styles.headerText}>PERFIL CRIANÇA</Text>
+            </LinearGradient>
 
-            <Text style={[styles.label, { color: darkMode ? "#ffffffff" : "#555" }]}>
-              TURMA
-            </Text>
-            <TextInput
-              style={[styles.input, { color: darkMode ? "#fff" : "#333", borderBottomColor: darkMode ? "#555" : "#929292ff" }]}
-              value={turma}
-              onChangeText={setTurma}
-              placeholder="Turma"
-              placeholderTextColor={darkMode ? "#888" : "#888"}
-            />
+            <ScrollView
+              showsVerticalScrollIndicator={false}
+              contentContainerStyle={styles.scrollContent}
+              keyboardShouldPersistTaps="handled"
+            >
+              <View style={styles.avatarContainer}>
+                <View
+                  style={[
+                    styles.avatarWrapper,
+                    { borderColor: darkMode ? "#881052ff" : "#780b47" },
+                  ]}
+                >
+                  <Ionicons
+                    name="person"
+                    size={100}
+                    color={darkMode ? "#fff" : "#000000ff"}
+                  />
+                  <TouchableOpacity style={styles.editIcon}>
+                    <FontAwesome name="pencil" size={18} color="#fff" />
+                  </TouchableOpacity>
+                </View>
+                <Text
+                  style={[
+                    styles.nomeCrianca,
+                    { color: darkMode ? "#fff" : "#333" },
+                  ]}
+                >
+                  Lucas
+                </Text>
+                <Text
+                  style={[
+                    styles.idadeCrianca,
+                    { color: darkMode ? "#ccc" : "#666" },
+                  ]}
+                >
+                  7 anos
+                </Text>
+              </View>
 
-            <Text style={[styles.label, { color: darkMode ? "#ffffffff" : "#555" }]}>
-              PERÍODO ESCOLAR
-            </Text>
-            <TextInput
-              style={[styles.input, { color: darkMode ? "#fff" : "#333", borderBottomColor: darkMode ? "#555" : "#929292ff" }]}
-              value={periodo}
-              onChangeText={setPeriodo}
-              placeholder="Período"
-              placeholderTextColor={darkMode ? "#888" : "#888"}
-            />
+              <View
+                style={[
+                  styles.inputContainer,
+                  { backgroundColor: darkMode ? "#1a1a1a" : "#fff" },
+                ]}
+              >
+                <Text
+                  style={[
+                    styles.label,
+                    { color: darkMode ? "#fff" : "#555" },
+                  ]}
+                >
+                  ESCOLA
+                </Text>
+                <TextInput
+                  style={[
+                    styles.input,
+                    {
+                      color: darkMode ? "#fff" : "#333",
+                      borderBottomColor: darkMode ? "#555" : "#929292ff",
+                    },
+                  ]}
+                  value={escola}
+                  onChangeText={setEscola}
+                  placeholder="Nome da Escola"
+                  placeholderTextColor={darkMode ? "#888" : "#888"}
+                />
+
+                <Text
+                  style={[
+                    styles.label,
+                    { color: darkMode ? "#fff" : "#555" },
+                  ]}
+                >
+                  TURMA
+                </Text>
+                <TextInput
+                  style={[
+                    styles.input,
+                    {
+                      color: darkMode ? "#fff" : "#333",
+                      borderBottomColor: darkMode ? "#555" : "#929292ff",
+                    },
+                  ]}
+                  value={turma}
+                  onChangeText={setTurma}
+                  placeholder="Turma"
+                  placeholderTextColor={darkMode ? "#888" : "#888"}
+                />
+
+                <Text
+                  style={[
+                    styles.label,
+                    { color: darkMode ? "#fff" : "#555" },
+                  ]}
+                >
+                  PERÍODO ESCOLAR
+                </Text>
+                <TextInput
+                  style={[
+                    styles.input,
+                    {
+                      color: darkMode ? "#fff" : "#333",
+                      borderBottomColor: darkMode ? "#555" : "#929292ff",
+                    },
+                  ]}
+                  value={periodo}
+                  onChangeText={setPeriodo}
+                  placeholder="Período"
+                  placeholderTextColor={darkMode ? "#888" : "#888"}
+                />
+              </View>
+
+              <TouchableOpacity
+                style={[
+                  styles.saveButton,
+                  { backgroundColor: "#780b47" },
+                ]}
+                onPress={() => navigation.goBack()}
+              >
+                <Text style={styles.saveButtonText}>SALVAR</Text>
+              </TouchableOpacity>
+            </ScrollView>
           </View>
-
-          <TouchableOpacity
-            style={[
-              styles.saveButton,
-              { backgroundColor: darkMode ? "#780b47" : "#780b47" },
-            ]}
-            onPress={() => navigation.goBack()}
-          >
-            <Text style={styles.saveButtonText}>SALVAR</Text>
-          </TouchableOpacity>
-        </ScrollView>
-      </View>
+        </TouchableWithoutFeedback>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
@@ -158,7 +215,7 @@ const styles = StyleSheet.create({
     bottom: 26,
   },
   scrollContent: {
-    paddingBottom: 30,
+    paddingBottom: 50,
   },
   avatarContainer: {
     alignItems: "center",
@@ -230,7 +287,7 @@ const styles = StyleSheet.create({
     borderRadius: 28,
     alignItems: "center",
     marginTop: 30,
-    marginBottom: 20,
+    marginBottom: 40,
     elevation: 5,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
