@@ -22,7 +22,7 @@ export default function Comeco({ navigation }) {
 
       <TouchableOpacity
         style={styles.registerButton}
-        onPress={() => navigation.navigate("Cadastrar")}
+        onPress={() => navigation.navigate("RealizarCadastro")}
       >
         <Text style={styles.registerText}>Cadastrar</Text>
       </TouchableOpacity>

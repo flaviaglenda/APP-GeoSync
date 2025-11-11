@@ -18,8 +18,8 @@ import { FontAwesome5 } from "@expo/vector-icons";
 
 import Comeco from "./screens/comeco";
 import Login from "./screens/RealizarLogin";
-import Cadastrar from "./screens/RealizarCadastro";
-import HomeScreen from "./screens/HomeScreen";
+import RealizarCadastro from "./screens/RealizarCadastro";
+import Home from "./screens/HomeScreen";
 import Notificacoes from "./screens/Notificacoes";
 import PerfilResponsavel from "./screens/PerfilResponsavel";
 import EditarResponsavel from "./screens/EditarPerfilResponsavel";
@@ -106,7 +106,7 @@ function DrawerNavigator() {
       })}
       drawerContent={(props) => <CustomDrawerContent {...props} />}
     >
-      <Drawer.Screen name="Início" component={HomeScreen} />
+      <Drawer.Screen name="Home" component={Home} />
       <Drawer.Screen name="Notificações" component={Notificacoes} />
       <Drawer.Screen name="Perfil" component={PerfilStackNavigator} />
       <Drawer.Screen name="Localização" component={Localizacao} />
@@ -132,7 +132,7 @@ function CustomDrawerContent(props) {
         label="Início"
         labelStyle={styles.label}
         icon={() => <FontAwesome5 name="home" size={20} color="#fff" />}
-        onPress={() => props.navigation.navigate("Início")}
+        onPress={() => props.navigation.navigate("Home")}
       />
 
       <DrawerItem
@@ -196,7 +196,7 @@ export default function App() {
           <Stack.Screen name="Splas" component={Splas} />
           <Stack.Screen name="Comeco" component={Comeco} />
           <Stack.Screen name="Login" component={Login} />
-          <Stack.Screen name="Cadastrar" component={Cadastrar} />
+          <Stack.Screen name="RealizarCadastro" component={RealizarCadastro} />
           <Stack.Screen name="EsqueceuSenha" component={EsqueceuSenha} />
           <Stack.Screen name="Main" component={DrawerNavigator} />
         </Stack.Navigator>

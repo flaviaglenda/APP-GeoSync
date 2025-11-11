@@ -24,6 +24,11 @@
     },
     "web": {
       "favicon": "../src/assets/icon_geosync.png"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "22027d1d-c93b-4d40-a8be-917ce7ffec4b"
+      }
     }
   }
 }
