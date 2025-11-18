@@ -23,7 +23,7 @@
     "expo-device": "~8.0.9",
     "expo-image-picker": "^17.0.8",
     "expo-linear-gradient": "~15.0.6",
-    "expo-notifications": "^0.32.12",
+    "expo-notifications": "~0.32.13",
     "expo-status-bar": "~3.0.7",
     "moment": "^2.30.1",
     "react": "19.1.0",

@@ -10,10 +10,65 @@ import {
   TextInput,
   StatusBar,
   KeyboardAvoidingView,
+  Alert, // Importar Alert para feedback ao usuário
 } from "react-native";
 import { FontAwesome, Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useTheme } from "../ThemeContext";
+import { supabase } from "../supabaseConfig"; // Importar o cliente Supabase
+
+// Função auxiliar para calcular a idade a partir da data de nascimento (DD/MM/AAAA)
+const calcularIdade = (dataNascimento) => {
+  if (!dataNascimento || dataNascimento.length !== 10) return null;
+  
+  const [dia, mes, ano] = dataNascimento.split('/').map(Number);
+  if (!dia || !mes || !ano) return null;
+
+  const dataNasc = new Date(ano, mes - 1, dia);
+  const hoje = new Date();
+  
+  let idade = hoje.getFullYear() - dataNasc.getFullYear();
+  const mesAtual = hoje.getMonth();
+  const mesNasc = dataNasc.getMonth();
+  
+  if (mesAtual < mesNasc || (mesAtual === mesNasc && hoje.getDate() < dataNasc.getDate())) {
+    idade--;
+  }
+  
+  return idade;
+};
+
+// Função auxiliar para simular a obtenção do ID do usuário logado
+// Em um aplicativo real, você obterá isso do estado de autenticação do Supabase (supabase.auth.user().id)
+const getUserId = async () => {
+    // **IMPORTANTE:** Em um app real, você usaria:
+    // const { data: { user } } = await supabase.auth.getUser();
+    // return user?.id;
+    
+    // Para fins de demonstração, vamos simular um ID de usuário UUID
+    // Você DEVE substituir isso pela lógica real de autenticação do Supabase.
+    return "00000000-0000-0000-0000-000000000001"; 
+};
+
+// Função auxiliar para buscar o mochila_id a partir do sensorId (que assumimos ser o nome da mochila)
+const getMochilaId = async (sensorId) => {
+    if (!sensorId) return null;
+
+    const { data, error } = await supabase
+        .from('mochilas')
+        .select('id')
+        .eq('nome', sensorId) // Assumindo que sensorId é o nome da mochila
+        .single();
+
+    if (error && error.code !== 'PGRST116') { // PGRST116 é "No rows found"
+        console.error("Erro ao buscar mochila:", error);
+        Alert.alert("Erro", "Não foi possível verificar o ID da mochila. Tente novamente.");
+        return null;
+    }
+    
+    return data ? data.id : null;
+};
+
 
 export default function AdicionarCrianca({ navigation }) {
   const { darkMode } = useTheme();
@@ -23,10 +78,77 @@ export default function AdicionarCrianca({ navigation }) {
   const [periodo, setPeriodo] = useState("");
   const [sensorId, setSensorId] = useState("");
   const [criada, setCriada] = useState(false);
+  const [loading, setLoading] = useState(false); // Estado de carregamento
 
-  const handleAdicionar = () => {
-    if (nome.trim() === "") return;
-    setCriada(true);
+  const handleAdicionar = async () => {
+    if (nome.trim() === "") {
+        Alert.alert("Erro", "O nome da criança é obrigatório.");
+        return;
+    }
+    
+    setLoading(true);
+
+    try {
+        // 1. Obter o ID do usuário logado
+        const usuario_id = await getUserId();
+        if (!usuario_id) {
+            Alert.alert("Erro de Autenticação", "Usuário não logado. Por favor, faça login.");
+            setLoading(false);
+            return;
+        }
+
+        // 2. Calcular a idade
+        const idade = calcularIdade(dataNascimento);
+        if (dataNascimento && idade === null) {
+            Alert.alert("Erro", "Formato de Data de Nascimento inválido. Use DD/MM/AAAA.");
+            setLoading(false);
+            return;
+        }
+        
+        // 3. Buscar o ID da mochila (se sensorId foi fornecido)
+        let mochila_id = null;
+        if (sensorId) {
+            mochila_id = await getMochilaId(sensorId);
+            if (!mochila_id) {
+                Alert.alert("Erro", `Mochila com ID/Nome "${sensorId}" não encontrada. Verifique o ID.`);
+                setLoading(false);
+                return;
+            }
+        }
+
+        // 4. Preparar os dados para inserção
+        const criancaData = {
+            nome: nome.trim(),
+            idade: idade, // Pode ser null se a data não for fornecida/válida
+            usuario_id: usuario_id,
+            mochila_id: mochila_id, // Pode ser null se não houver mochila
+            // foto_url: A lógica de upload de foto é mais complexa e será tratada separadamente, 
+            // por enquanto, vamos deixar como null ou um valor padrão.
+            // data_criacao: O Supabase deve preencher automaticamente com o valor padrão.
+        };
+
+        // 5. Inserir no Supabase
+        const { data, error } = await supabase
+            .from('criancas')
+            .insert([criancaData])
+            .select(); // Retorna o registro inserido
+
+        if (error) {
+            console.error("Erro ao adicionar criança:", error);
+            Alert.alert("Erro de Banco de Dados", `Não foi possível adicionar a criança: ${error.message}`);
+            return;
+        }
+
+        // Sucesso
+        Alert.alert("Sucesso", `${nome} foi adicionado(a) com sucesso!`);
+        setCriada(true); // Exibe o card de sucesso
+        
+    } catch (e) {
+        console.error("Erro inesperado:", e);
+        Alert.alert("Erro", "Ocorreu um erro inesperado ao adicionar a criança.");
+    } finally {
+        setLoading(false);
+    }
   };
 
   const handleRemover = () => {
@@ -211,7 +333,7 @@ export default function AdicionarCrianca({ navigation }) {
                 returnKeyType="done"
               />
 
-              <TouchableOpacity style={styles.button} onPress={handleAdicionar}>
+              <TouchableOpacity style={styles.button} onPress={handleAdicionar} disabled={loading}>
                 <LinearGradient
                   colors={
                     darkMode ? ["#75153fff", "#75153fff"] : ["#780b47", "#64063aff"]
@@ -220,7 +342,9 @@ export default function AdicionarCrianca({ navigation }) {
                   end={{ x: 1, y: 0 }}
                   style={styles.gradient}
                 >
-                  <Text style={styles.buttonText}>ADICIONAR</Text>
+                  <Text style={styles.buttonText}>
+                    {loading ? "ADICIONANDO..." : "ADICIONAR"}
+                  </Text>
                 </LinearGradient>
               </TouchableOpacity>
             </>
