@@ -15,17 +15,15 @@ import { FontAwesome } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { supabase } from "../supabaseConfig";
 
-// 1. CORRIGIDO: Renomeado para RealizarCadastro
 export default function RealizarCadastro({ navigation }) {
   const { width } = Dimensions.get("screen");
 
-  // 2. CORRIGIDO: Adicionado o state 'name' e removido o state 'message'
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
-  // 3. CORRIGIDO: Função de LOGIN (signInWithPassword) substituída por CADASTRO (signUp)
+  // FUNÇÃO PRINCIPAL DE CADASTRO
   const handleRegister = async () => {
     if (!name || !email || !password) {
       Alert.alert("Erro", "Por favor, preencha todos os campos.");
@@ -35,48 +33,53 @@ export default function RealizarCadastro({ navigation }) {
     setLoading(true);
 
     try {
-      // Criar usuário no Auth (Faz o login automático após desativar a confirmação)
+      // CRIA O USUÁRIO NO AUTH
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email,
         password,
+        options: {
+          data: { full_name: name }
+        }
       });
 
-      if (authError) {
-        throw new Error(authError.message);
-      }
+      if (authError) throw new Error(authError.message);
 
       const userId = authData?.user?.id;
+      if (!userId) throw new Error("Erro inesperado. ID não recebido.");
 
-      // Inserir dados na tabela users
+      // INSERE NA TABELA USERS
       const { error: dbError } = await supabase.from("users").insert({
+        id: userId,
         nome: name,
         email: email,
-        id: userId
+        tel: "",
+        cpf: "",
+        foto_url: ""
       });
 
-      if (dbError) {
-        console.error("Erro ao inserir no banco:", dbError);
-        throw new Error("Erro ao salvar seus dados. Tente novamente.");
-      }
+      if (dbError) throw new Error("Erro ao salvar dados no banco.");
 
       Alert.alert(
-        "Sucesso",
-        "Cadastro realizado e login efetuado!",
-        [{
-          text: "OK", onPress: () => navigation.reset({
-            index: 0,
-            routes: [{
-              name: "Main", // Rota do Stack que contém o Drawer Navigator
-              params: {
-                userEmail: email,
-                userId: userId
-              }
-            }]
-          })
-        }]
+        "Sucesso!",
+        "Cadastro concluído!",
+        [
+          {
+            text: "OK",
+            onPress: () =>
+              navigation.reset({
+                index: 0,
+                routes: [
+                  {
+                    name: "Main",
+                    params: { userId, userEmail: email }
+                  }
+                ]
+              })
+          }
+        ]
       );
     } catch (error) {
-      Alert.alert("Erro", error.message || "Erro ao realizar cadastro");
+      Alert.alert("Erro", error.message || "Não foi possível cadastrar.");
     } finally {
       setLoading(false);
     }
@@ -90,7 +93,6 @@ export default function RealizarCadastro({ navigation }) {
     }
   };
 
-
   return (
     <LinearGradient colors={["#000000", "#780b47"]} style={styles.container}>
       <KeyboardAvoidingView
@@ -99,11 +101,17 @@ export default function RealizarCadastro({ navigation }) {
       >
         <TouchableOpacity style={styles.backButton} onPress={handleBack}>
           <FontAwesome name="arrow-left" size={28} color="#fff" />
-        </TouchableOpacity><Image
+        </TouchableOpacity>
+
+        <Image
           source={require("../src/assets/logo_geosync_fundotransparente.png")}
           style={styles.logo}
           resizeMode="contain"
-        /><Text style={styles.title}>CADASTRO</Text><View style={styles.inputContainer}>
+        />
+
+        <Text style={styles.title}>CADASTRO</Text>
+
+        <View style={styles.inputContainer}>
           <Text style={styles.label}>NOME:</Text>
           <TextInput
             value={name}
@@ -111,9 +119,10 @@ export default function RealizarCadastro({ navigation }) {
             style={[styles.input, { width: width * 0.8 }]}
             placeholder="Digite seu nome completo"
             placeholderTextColor="#ccc"
-            keyboardType="default"
             autoCapitalize="words"
-          /><Text style={styles.label}>EMAIL:</Text>
+          />
+
+          <Text style={styles.label}>EMAIL:</Text>
           <TextInput
             value={email}
             onChangeText={setEmail}
@@ -122,25 +131,29 @@ export default function RealizarCadastro({ navigation }) {
             placeholderTextColor="#ccc"
             keyboardType="email-address"
             autoCapitalize="none"
-          /><Text style={styles.label}>SENHA:</Text>
+          />
+
+          <Text style={styles.label}>SENHA:</Text>
           <TextInput
             value={password}
             onChangeText={setPassword}
             style={[styles.input, { width: width * 0.8 }]}
             placeholder="Digite sua senha"
             placeholderTextColor="#ccc"
-            secureTextEntry={true}
+            secureTextEntry
           />
         </View>
+
         <TouchableOpacity
-          style={[styles.loginButton, loading ? { opacity: 0.7 } : null]}
+          style={[styles.loginButton, loading && { opacity: 0.7 }]}
           onPress={handleRegister}
           disabled={loading}
         >
           <Text style={styles.loginText}>
-            <Text>{loading ? "CADASTRANDO..." : "CADASTRAR"}</Text>
+            {loading ? "CADASTRANDO..." : "CADASTRAR"}
           </Text>
         </TouchableOpacity>
+
         <View style={styles.registerContainer}>
           <Text style={styles.registerText}>
             Já possui conta?{" "}
@@ -206,15 +219,8 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     paddingVertical: 5,
   },
-  forgotButton: {
-    alignSelf: "flex-end",
-  },
-  forgotText: {
-    color: "#ccc",
-    fontSize: 15,
-  },
   loginButton: {
-    backgroundColor: "#ffffffff",
+    backgroundColor: "#fff",
     width: 150,
     paddingVertical: 15,
     borderRadius: 28,
@@ -224,13 +230,16 @@ const styles = StyleSheet.create({
   loginText: {
     color: "#50062F",
     fontSize: 18,
-    fontWeight: "bold"
+    fontWeight: "bold",
+  },
+  registerContainer: {
+    marginTop: 10,
   },
   registerText: {
     color: "#fff",
     fontSize: 15,
   },
-  registerLinkStyle: { // NOVO ESTILO PARA O LINK
+  registerLink: {
     fontWeight: "bold",
     textDecorationLine: "underline",
     color: "#ccc",

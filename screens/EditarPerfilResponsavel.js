@@ -34,47 +34,51 @@ export default function EditarResponsavel({ navigation }) {
     carregarUsuario();
   }, []);
 
+  // =========================
+  // PEGAR DADOS DO USUÁRIO
+  // =========================
   const carregarUsuario = async () => {
-    const {
-      data: { user: loggedUser },
-      error,
-    } = await supabase.auth.getUser();
+    const { data, error } = await supabase.auth.getUser();
 
-    if (error || !loggedUser) {
+    if (error || !data.user) {
       Alert.alert("Erro", "Não foi possível buscar usuário.");
       return;
     }
 
+    const loggedUser = data.user;
     setUser(loggedUser);
 
-    // Verifica se já existe registro na tabela users
-    const { data, error: selectError } = await supabase
+    // busca na tabela users
+    const { data: perfil, error: selectError } = await supabase
       .from("users")
       .select("*")
       .eq("id", loggedUser.id)
       .single();
 
-    if (selectError || !data) {
-      // Cria registro se não existir
+    if (selectError || !perfil) {
       await supabase.from("users").insert({
         id: loggedUser.id,
-        nome: loggedUser.user_metadata?.full_name || "Sem Nome",
+        nome: loggedUser.user_metadata?.full_name || "",
         email: loggedUser.email,
         tel: "",
         foto_url: "",
       });
-      setNome(loggedUser.user_metadata?.full_name || "Sem Nome");
+
+      setNome(loggedUser.user_metadata?.full_name || "");
       setEmail(loggedUser.email);
       setTelefone("");
       setFotoUrl("");
     } else {
-      setNome(data.nome || "Sem Nome");
-      setEmail(data.email || loggedUser.email);
-      setTelefone(data.tel || "");
-      setFotoUrl(data.foto_url || "");
+      setNome(perfil.nome);
+      setEmail(perfil.email);
+      setTelefone(perfil.tel);
+      setFotoUrl(perfil.foto_url);
     }
   };
 
+  // =========================
+  // SELECIONAR FOTO
+  // =========================
   const escolherFoto = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
@@ -83,25 +87,40 @@ export default function EditarResponsavel({ navigation }) {
     });
 
     if (!result.canceled) {
-      const image = result.assets[0];
-      await enviarFoto(image);
+      await enviarFoto(result.assets[0]);
     }
   };
 
+  // =========================
+  // UPLOAD REAL DA FOTO (BLOB)
+  // =========================
   const enviarFoto = async (image) => {
     try {
       setCarregando(true);
+
+      // Converter URI → Blob
+      const response = await fetch(image.uri);
+      const blob = await response.blob();
+
       const ext = image.uri.split(".").pop();
-      const fileName = `${Date.now()}.${ext}`;
+      const fileName = `${user.id}_${Date.now()}.${ext}`;
       const filePath = `perfil/${fileName}`;
 
+      // Upload correto com Blob
       const { error: uploadError } = await supabase.storage
         .from("imagens")
-        .upload(filePath, image.uri, { cacheControl: "3600", upsert: true });
+        .upload(filePath, blob, {
+          contentType: blob.type,
+          upsert: true,
+        });
 
       if (uploadError) throw uploadError;
 
-      const { data } = supabase.storage.from("imagens").getPublicUrl(filePath);
+      // Pegar URL pública
+      const { data } = supabase.storage
+        .from("imagens")
+        .getPublicUrl(filePath);
+
       setFotoUrl(data.publicUrl);
     } catch (err) {
       console.log(err);
@@ -111,6 +130,9 @@ export default function EditarResponsavel({ navigation }) {
     }
   };
 
+  // =========================
+  // SALVAR PERFIL COMPLETO
+  // =========================
   const salvarPerfil = async () => {
     if (!user) return;
 
@@ -121,15 +143,16 @@ export default function EditarResponsavel({ navigation }) {
 
     setCarregando(true);
 
-    // Atualiza tabela users (upsert garante criar se não existir)
+    // Atualiza tabela users
     const { error: upsertError } = await supabase
       .from("users")
       .upsert(
         {
           id: user.id,
-          nome: nome || "Sem Nome",
-          tel: telefone || "",
-          foto_url: fotoUrl || "",
+          nome,
+          email,
+          tel: telefone,
+          foto_url: fotoUrl,
         },
         { onConflict: "id" }
       );
@@ -148,15 +171,16 @@ export default function EditarResponsavel({ navigation }) {
 
     if (upsertError || authError) {
       console.log(upsertError, authError);
-      Alert.alert(
-        "Erro",
-        "Falha ao salvar alterações. Verifique políticas RLS e campos obrigatórios."
-      );
+      Alert.alert("Erro", "Falha ao salvar alterações.");
     } else {
       Alert.alert("Sucesso", "Perfil atualizado!");
       navigation.goBack();
     }
   };
+
+  // =========================
+  // RENDER
+  // =========================
 
   return (
     <SafeAreaView
@@ -219,6 +243,7 @@ export default function EditarResponsavel({ navigation }) {
                       color={darkMode ? "#fff" : "#000"}
                     />
                   )}
+
                   <View style={styles.editIcon}>
                     <FontAwesome name="pencil" size={18} color="#fff" />
                   </View>
