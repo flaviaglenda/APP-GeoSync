@@ -11,80 +11,80 @@ import {
   Dimensions,
   Alert
 } from "react-native";
-import { LinearGradient } from "expo-linear-gradient";
 import { FontAwesome } from "@expo/vector-icons";
-// import { supabase } from "../supabaseConfig"; // 🔒 Comentado (sem banco)
-
-export default function LoginScreen({ navigation }) {
+import { LinearGradient } from "expo-linear-gradient";
+import { supabase } from "../supabaseConfig";
+// Nome do componente correto
+// 2. ALTERADO: Removido 'navigation' das props, pois vamos usar o hook.
+export default function RealizarLogin({ navigation }) {
   const { width } = Dimensions.get("screen");
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState(null);
+
+  const handleLogin = async () => {
+    if (!email || !password) {
+      Alert.alert('Erro', 'Preencha o e-mail e a senha.');
+      return;
+    }
+    setLoading(true);
+    console.log("Tentativa de Login iniciada...");
+
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: email,
+        password: password,
+      });
+
+      if (error) {
+        console.error('Erro do Supabase:', error.message);
+        Alert.alert('Erro de Login', error.message || 'Credenciais inválidas. Tente novamente.');
+        return;
+      }
+
+      console.log('Login com sucesso. Dados do usuário:', data.user);
+
+      if (data.user) {
+        console.log('Redirecionando para HomeScreen...');
+        
+        // 3. CORREÇÃO FINAL: Usando navigation.reset() diretamente da prop.
+        // O erro anterior era `navigation.navigation.reset`. 
+        // O erro do v2 (StackActions) foi de contexto. Este é o uso correto garantido pelo React Navigation.
+        navigation.reset({
+            index: 0,
+            routes: [
+              {
+                name: "Main",
+                params: {
+                  userEmail: email,
+                  userId: data.user.id
+                }
+              }
+            ],
+          });
+      } else {
+        console.warn("Supabase não retornou dados do usuário, mas também não deu erro.");
+        Alert.alert('Erro', 'O login falhou por um motivo desconhecido.');
+      }
+
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Ocorreu um erro inesperado (Catch).';
+      console.error('Erro de runtime/catch:', errorMessage);
+      Alert.alert('Erro', errorMessage);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleBack = () => {
     if (navigation.canGoBack()) {
       navigation.goBack();
     } else {
-      navigation.navigate("Comeco");
+      navigation.navigate("Comeco"); 
     }
   };
 
-  // 🚀 Login fixo
-  const handleLogin = async () => {
-    if (!email || !password) {
-      setMessage({ type: "error", text: "Por favor, preencha todos os campos." });
-      return;
-    }
-
-    setLoading(true);
-    setMessage(null);
-
-    try {
-      // 💬 
-      if (email === "lucas@l.com" && password === "1234") {
-      
-        Alert.alert("Sucesso", "Login realizado com sucesso!");
-        navigation.replace("Main");
-      } else {
-       
-        setMessage({
-          type: "error",
-          text: "Email ou senha incorretos."
-        });
-      }
-
-      /* 🔒 Código original com Supabase (comentado)
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-
-      if (error) throw error;
-
-      if (data?.user) {
-        const { data: userData, error: userError } = await supabase
-          .from('users')
-          .select('*')
-          .eq('auth_id', data.user.id)
-          .single();
-
-        if (userError) {
-          console.warn('Erro ao buscar dados do usuário:', userError.message);
-        }
-
-        navigation.replace('Main');
-      }
-      */
-    } catch (error) {
-      setMessage({
-        type: "error",
-        text: "Erro ao fazer login. Tente novamente."
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
 
   return (
     <LinearGradient colors={["#000000", "#780b47"]} style={styles.container}>
@@ -94,85 +94,60 @@ export default function LoginScreen({ navigation }) {
       >
         <TouchableOpacity style={styles.backButton} onPress={handleBack}>
           <FontAwesome name="arrow-left" size={28} color="#fff" />
-        </TouchableOpacity>
-
-        <Image
+        </TouchableOpacity><Image
           source={require("../src/assets/logo_geosync_fundotransparente.png")}
           style={styles.logo}
           resizeMode="contain"
-        />
-
-        <Text style={styles.title}>ENTRAR</Text>
-
-        <View style={styles.inputContainer}>
+        /><Text style={styles.title}>LOGIN</Text><View style={styles.inputContainer}>
           <Text style={styles.label}>EMAIL:</Text>
           <TextInput
             value={email}
             onChangeText={setEmail}
             style={[styles.input, { width: width * 0.8 }]}
+            placeholder="Seu email cadastrado"
             placeholderTextColor="#ccc"
             keyboardType="email-address"
             autoCapitalize="none"
-          />
-
-          <Text style={styles.label}>SENHA:</Text>
+          /><Text style={styles.label}>SENHA:</Text>
           <TextInput
             value={password}
             onChangeText={setPassword}
-            style={styles.input}
+            style={[styles.input, { width: width * 0.8 }]}
+            placeholder="Sua senha"
             placeholderTextColor="#ccc"
             secureTextEntry={true}
           />
-
-          <TouchableOpacity
-            style={styles.forgotButton}
-            onPress={() => navigation.navigate("EsqueceuSenha")}
-          >
-            <Text style={styles.forgotText}>Esqueceu a senha?</Text>
+          <TouchableOpacity style={styles.forgotButton}>
+            <Text style={styles.forgotText}
+              onPress={() => navigation.navigate("EsqueceuSenha")} >Esqueceu a senha?</Text>
           </TouchableOpacity>
-        </View>
-
-        {message && (
-          <Text
-            style={[
-              styles.messageText,
-              { color: message.type === "error" ? "#ff6666" : "#88ff88" },
-            ]}
-          >
-            {message.text}
-          </Text>
-        )}
-
-        <TouchableOpacity
+        </View><TouchableOpacity
           style={[styles.loginButton, loading ? { opacity: 0.7 } : null]}
           onPress={handleLogin}
           disabled={loading}
         >
           <Text style={styles.loginText}>
-            {loading ? "ENTRANDO..." : "ENTRAR"}
+            <Text>{loading ? 'ENTRANDO...' : 'ENTRAR'}</Text>
           </Text>
-        </TouchableOpacity>
+        </TouchableOpacity><View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}>
+          <Text style={styles.registerText}>
+            Não possui conta?{" "}
+            <TouchableOpacity onPress={() => navigation.navigate("RealizarCadastro")}>
+              <Text
+                style={[styles.registerText, styles.registerLinkStyle]} // Aplicando o novo estilo
+              >
+                Cadastre-se
+              </Text>
+            </TouchableOpacity>
 
-        <Text style={styles.registerText}>
-          Não possui conta?{" "}
-          <Text
-            style={styles.registerLink}
-            onPress={() => navigation.navigate("Cadastrar")}
-          >
-            Cadastrar
           </Text>
-        </Text>
+        </View>
       </KeyboardAvoidingView>
     </LinearGradient>
   );
 }
 
 const styles = StyleSheet.create({
-  messageText: {
-    fontSize: 14,
-    marginBottom: 15,
-    textAlign: 'center',
-  },
   container: {
     flex: 1,
     justifyContent: "center",
@@ -230,7 +205,7 @@ const styles = StyleSheet.create({
   },
   loginButton: {
     backgroundColor: "#ffffffff",
-    width: 130,
+    width: 150,
     paddingVertical: 15,
     borderRadius: 28,
     alignItems: "center",
@@ -239,13 +214,15 @@ const styles = StyleSheet.create({
   loginText: {
     color: "#50062F",
     fontSize: 18,
+    fontWeight: "bold"
   },
   registerText: {
     color: "#fff",
     fontSize: 15,
   },
-  registerLink: {
+  registerLinkStyle: {
     fontWeight: "bold",
     textDecorationLine: "underline",
+    color: "#ccc",
   },
 });

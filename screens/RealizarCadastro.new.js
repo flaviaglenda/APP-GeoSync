@@ -15,72 +15,14 @@ import { FontAwesome } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { supabase } from "../supabaseConfig";
 
-// 1. CORRIGIDO: Renomeado para RealizarCadastro
 export default function RealizarCadastro({ navigation }) {
-  const { width } = Dimensions.get("screen");
+  const { height, width } = Dimensions.get("screen");
 
-  // 2. CORRIGIDO: Adicionado o state 'name' e removido o state 'message'
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-
-  // 3. CORRIGIDO: Função de LOGIN (signInWithPassword) substituída por CADASTRO (signUp)
-  const handleRegister = async () => {
-    if (!name || !email || !password) {
-      Alert.alert("Erro", "Por favor, preencha todos os campos.");
-      return;
-    }
-
-    setLoading(true);
-
-    try {
-      // Criar usuário no Auth (Faz o login automático após desativar a confirmação)
-      const { data: authData, error: authError } = await supabase.auth.signUp({
-        email,
-        password,
-      });
-
-      if (authError) {
-        throw new Error(authError.message);
-      }
-
-      const userId = authData?.user?.id;
-
-      // Inserir dados na tabela users
-      const { error: dbError } = await supabase.from("users").insert({
-        nome: name,
-        email: email,
-        id: userId
-      });
-
-      if (dbError) {
-        console.error("Erro ao inserir no banco:", dbError);
-        throw new Error("Erro ao salvar seus dados. Tente novamente.");
-      }
-
-      Alert.alert(
-        "Sucesso",
-        "Cadastro realizado e login efetuado!",
-        [{
-          text: "OK", onPress: () => navigation.reset({
-            index: 0,
-            routes: [{
-              name: "Main", // Rota do Stack que contém o Drawer Navigator
-              params: {
-                userEmail: email,
-                userId: userId
-              }
-            }]
-          })
-        }]
-      );
-    } catch (error) {
-      Alert.alert("Erro", error.message || "Erro ao realizar cadastro");
-    } finally {
-      setLoading(false);
-    }
-  };
+  const [message, setMessage] = useState(null);
 
   const handleBack = () => {
     if (navigation.canGoBack()) {
@@ -90,6 +32,67 @@ export default function RealizarCadastro({ navigation }) {
     }
   };
 
+  const handleRegister = async () => {
+    if (!name || !email || !password) {
+      Alert.alert("Erro", "Por favor, preencha todos os campos.");
+      return;
+    }
+
+    setLoading(true);
+    setMessage(null);
+
+    try {
+      // 1. Criar usuário no Auth
+      const { data: authData, error: authError } = await supabase.auth.signUp({
+        email,
+        password,
+      });
+
+      if (authError) {
+        throw new Error(authError.message);
+      }
+
+      if (!authData?.user?.id) {
+        throw new Error("Erro ao criar usuário. Tente novamente.");
+      }
+
+      // 2. Inserir dados na tabela users
+      const { error: dbError } = await supabase.from("users").insert({
+        nome: name,
+        email: email,
+        auth_id: authData.user.id
+      });
+
+      if (dbError) {
+        console.error("Erro ao inserir no banco:", dbError);
+        // Tentar sem auth_id se der erro
+        const { error: basicError } = await supabase.from("users").insert({
+          nome: name,
+          email: email
+        });
+
+        if (basicError) {
+          throw new Error("Erro ao salvar seus dados. Tente novamente.");
+        }
+      }
+
+      // Sucesso!
+      Alert.alert(
+        "Sucesso",
+        "Cadastro realizado com sucesso!",
+        [
+          {
+            text: "OK",
+            onPress: () => navigation.navigate("Login")
+          }
+        ]
+      );
+    } catch (error) {
+      Alert.alert("Erro", error.message || "Erro ao realizar cadastro");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <LinearGradient colors={["#000000", "#780b47"]} style={styles.container}>
@@ -99,12 +102,22 @@ export default function RealizarCadastro({ navigation }) {
       >
         <TouchableOpacity style={styles.backButton} onPress={handleBack}>
           <FontAwesome name="arrow-left" size={28} color="#fff" />
-        </TouchableOpacity><Image
+        </TouchableOpacity>
+
+        <Image
           source={require("../src/assets/logo_geosync_fundotransparente.png")}
           style={styles.logo}
           resizeMode="contain"
-        /><Text style={styles.title}>CADASTRO</Text><View style={styles.inputContainer}>
-          <Text style={styles.label}>NOME:</Text>
+        />
+
+        <Text style={styles.title}>
+          <Text>CADASTRO</Text>
+        </Text>
+
+        <View style={styles.inputContainer}>
+          <Text style={styles.label}>
+            <Text>NOME:</Text>
+          </Text>
           <TextInput
             value={name}
             onChangeText={setName}
@@ -113,7 +126,11 @@ export default function RealizarCadastro({ navigation }) {
             placeholderTextColor="#ccc"
             keyboardType="default"
             autoCapitalize="words"
-          /><Text style={styles.label}>EMAIL:</Text>
+          />
+
+          <Text style={styles.label}>
+            <Text>EMAIL:</Text>
+          </Text>
           <TextInput
             value={email}
             onChangeText={setEmail}
@@ -122,7 +139,11 @@ export default function RealizarCadastro({ navigation }) {
             placeholderTextColor="#ccc"
             keyboardType="email-address"
             autoCapitalize="none"
-          /><Text style={styles.label}>SENHA:</Text>
+          />
+
+          <Text style={styles.label}>
+            <Text>SENHA:</Text>
+          </Text>
           <TextInput
             value={password}
             onChangeText={setPassword}
@@ -132,6 +153,7 @@ export default function RealizarCadastro({ navigation }) {
             secureTextEntry={true}
           />
         </View>
+
         <TouchableOpacity
           style={[styles.loginButton, loading ? { opacity: 0.7 } : null]}
           onPress={handleRegister}
@@ -141,9 +163,11 @@ export default function RealizarCadastro({ navigation }) {
             <Text>{loading ? "CADASTRANDO..." : "CADASTRAR"}</Text>
           </Text>
         </TouchableOpacity>
+
         <View style={styles.registerContainer}>
           <Text style={styles.registerText}>
-            Já possui conta?{" "}
+            <Text>Já possui conta?</Text>
+            {" "}
             <Text
               style={styles.registerLink}
               onPress={() => navigation.navigate("Login")}
@@ -193,11 +217,15 @@ const styles = StyleSheet.create({
   },
   inputContainer: {
     marginBottom: 40,
+    width: "100%",
+    alignItems: "center",
   },
   label: {
     color: "#fff",
     marginBottom: 5,
     fontWeight: "bold",
+    alignSelf: "flex-start",
+    marginLeft: "10%",
   },
   input: {
     borderBottomWidth: 1,
@@ -206,15 +234,8 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     paddingVertical: 5,
   },
-  forgotButton: {
-    alignSelf: "flex-end",
-  },
-  forgotText: {
-    color: "#ccc",
-    fontSize: 15,
-  },
   loginButton: {
-    backgroundColor: "#ffffffff",
+    backgroundColor: "#ffffff",
     width: 150,
     paddingVertical: 15,
     borderRadius: 28,
@@ -226,13 +247,17 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: "bold"
   },
+  registerContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+  },
   registerText: {
     color: "#fff",
     fontSize: 15,
   },
-  registerLinkStyle: { // NOVO ESTILO PARA O LINK
+  registerLink: {
     fontWeight: "bold",
     textDecorationLine: "underline",
-    color: "#ccc",
-  },
+  }
 });
