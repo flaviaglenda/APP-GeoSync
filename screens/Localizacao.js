@@ -1,35 +1,118 @@
-import React from "react";
-import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
+import React, { useEffect, useState } from "react";
+import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator } from "react-native";
 import MapView, { Marker } from "react-native-maps";
 import { MaterialIcons, Ionicons } from "@expo/vector-icons";
 import { useTheme } from "../ThemeContext";
+import { supabase } from "../supabaseConfig";
+import { Polyline } from "react-native-maps";
 
 export default function MapScreen() {
   const { darkMode } = useTheme();
+  const [mostrarHistorico, setMostrarHistorico] = useState(false);
+  const [historico, setHistorico] = useState([]);
+  const [posicao, setPosicao] = useState(null);
+  const [carregando, setCarregando] = useState(true);
+
+  async function buscarUltimaLocalizacao() {
+    const { data, error } = await supabase
+      .from("gps_dados")
+      .select("*")
+      .eq("mochila_id", 1)  // <- troque dinamicamente depois se quiser
+      .order("data_hora", { ascending: false })
+      .limit(1);
+
+    if (!error && data.length > 0) {
+      setPosicao(data[0]);
+    }
+    // Defina área segura (ex: escola)
+    const areaSegura = {
+      latitude: -23.099,
+      longitude: -45.707
+    };
+
+    const distancia = calcularDistancia(
+      areaSegura.latitude,
+      areaSegura.longitude,
+      data[0].latitude,
+      data[0].longitude
+    );
+
+    console.log("Distância atual da área segura:", distancia, "metros");
+
+    
+    if (distancia > 150) { 
+      alert("⚠️ A criança saiu da área segura!");
+    }
+    setCarregando(false);
+  }
+  async function carregarHistorico() {
+    const { data, error } = await supabase
+      .from("gps_dados")
+      .select("*")
+      .eq("mochila_id", 1)
+      .order("data_hora", { ascending: true });
+
+    if (!error) {
+      setHistorico(data);
+      setMostrarHistorico(true);
+    }
+  }
+
+  useEffect(() => {
+    buscarUltimaLocalizacao();
+
+    const interval = setInterval(buscarUltimaLocalizacao, 5000);
+    return () => clearInterval(interval);
+  }, []);
 
   const region = {
-    latitude: -23.099,
-    longitude: -45.707,
-    latitudeDelta: 0.05,
-    longitudeDelta: 0.05,
+    latitude: posicao?.latitude || -23.099,
+    longitude: posicao?.longitude || -45.707,
+    latitudeDelta: 0.01,
+    longitudeDelta: 0.01,
   };
+  function calcularDistancia(lat1, lon1, lat2, lon2) {
+    const R = 6371e3; // Raio da Terra em metros
+    const toRad = (value) => (value * Math.PI) / 180;
 
+    const dLat = toRad(lat2 - lat1);
+    const dLon = toRad(lon2 - lon1);
+
+    const a =
+      Math.sin(dLat / 2) ** 2 +
+      Math.cos(toRad(lat1)) *
+      Math.cos(toRad(lat2)) *
+      Math.sin(dLon / 2) ** 2;
+
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c; // retorna metros
+  }
   return (
     <View style={[styles.container, { backgroundColor: darkMode ? "#000" : "#fff" }]}>
-      {/* mapa */}
-      <MapView style={styles.map} initialRegion={region}>
-        <Marker
-          coordinate={{ latitude: -23.099, longitude: -45.707 }}
-          title="Lucas"
-          description="Está aqui há 2h26min"
-        />
-        <Marker
-          coordinate={{ latitude: -23.09, longitude: -45.72 }}
-          title="SESI-Caçapava"
-          description="2 km de distância"
-        />
-      </MapView>
 
+      {carregando ? (
+        <ActivityIndicator size="large" color="#ff0099" style={{ marginTop: 50 }} />
+      ) : (
+        <MapView style={styles.map} region={region}>
+          {posicao && (
+            <Marker
+              coordinate={{ latitude: posicao.latitude, longitude: posicao.longitude }}
+              title="Localização Atual"
+              description={`Atualizado em: ${new Date(posicao.data_hora).toLocaleTimeString()}`}
+            />
+          )}
+          {mostrarHistorico && (
+            <Polyline
+              coordinates={historico.map(p => ({
+                latitude: p.latitude,
+                longitude: p.longitude
+              }))}
+              strokeWidth={4}
+              strokeColor="#ff0099"
+            />
+          )}
+        </MapView>
+      )}
       {/* painel informações */}
       <View
         style={[
@@ -83,7 +166,7 @@ export default function MapScreen() {
           </View>
         </View>
 
-        <TouchableOpacity
+        <TouchableOpacity onPress={carregarHistorico}
           style={[
             styles.botaoHistorico,
             { backgroundColor: darkMode ? "#780b47" : "#000" },
