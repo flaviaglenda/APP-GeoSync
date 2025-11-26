@@ -77,7 +77,7 @@ function DrawerNavigator() {
   return (
     <Drawer.Navigator
       screenOptions={({ navigation }) => ({
-        headerStyle: { backgroundColor: "#000" },
+        headerStyle: { backgroundColor: "#192230" },
         headerTintColor: "#fff",
         headerTitle: "",
         headerLeft: () => (
@@ -102,7 +102,7 @@ function DrawerNavigator() {
             resizeMode="contain"
           />
         ),
-        drawerStyle: { backgroundColor: "#000" },
+        drawerStyle: { backgroundColor: "#192230" },
       })}
       drawerContent={(props) => <CustomDrawerContent {...props} />}
     >
@@ -208,7 +208,7 @@ export default function App() {
 const styles = StyleSheet.create({
   drawerContent: {
     flex: 1,
-    backgroundColor: "#000",
+    backgroundColor: "#192230",
     paddingTop: 20,
   },
   closeBtn: {

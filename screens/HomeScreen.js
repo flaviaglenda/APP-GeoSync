@@ -5,12 +5,12 @@ import { LinearGradient } from "expo-linear-gradient";
 import { useTheme } from "../ThemeContext";
 
 export default function HomeScreen({ navigation }) {
-  const { darkMode } = useTheme();
+  const { darkMode, theme } = useTheme();
 
   return (
-    <ScrollView style={[styles.container, { backgroundColor: darkMode ? "#000" : "#e9e9eb" }]}>
+    <ScrollView style={[styles.container, { backgroundColor: theme.colors.background }]}>
       <TouchableOpacity
-        style={[styles.btnDetalhes, { backgroundColor: darkMode ? "#fff" : "#000" }]}
+        style={[styles.btnDetalhes, { backgroundColor: darkMode ? "#fff" : "#192230" }]}
         onPress={() => navigation.navigate("Localização")}
       >
         <Ionicons
@@ -97,7 +97,7 @@ export default function HomeScreen({ navigation }) {
 
       <Text style={[styles.statusTitle, { color: darkMode ? "#ffffffff" : "#000" }]}>Status</Text>
 
-      <View style={[styles.card, { backgroundColor: darkMode ? "#f2efefff" : "#000" }]}>
+      <View style={[styles.card, { backgroundColor: darkMode ? "#f2efefff" : "#192230" }]}>
         <Text style={[styles.cardTitle, { color: darkMode ? "#000" : "#fff" }]}>
           Mochila GeoKid Pro - Lucas
         </Text>

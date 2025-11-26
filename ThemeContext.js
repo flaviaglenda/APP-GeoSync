@@ -12,15 +12,15 @@ export const ThemeProvider = ({ children }) => {
     darkMode,
     colors: darkMode
       ? {
-          background: "#121212",
-          card: "#1E1E1E",
+          background: "#192230",
+          card: "#192230",
           text: "#FFFFFF",
           contrast: "#f5dd4b",
         }
       : {
           background: "#e9e9ebff",
           card: "#5b133aff",
-          text: "#000000",
+          text: "#192230",
           contrast: "#780b47",
         },
   };
