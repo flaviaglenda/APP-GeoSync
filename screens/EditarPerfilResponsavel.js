@@ -20,7 +20,7 @@ import { supabase } from "../supabaseConfig";
 import { useTheme } from "../ThemeContext";
 
 export default function EditarResponsavel({ navigation }) {
-  const { darkMode } = useTheme();
+   const { darkMode, theme } = useTheme();
   const [user, setUser] = useState(null);
   const [nome, setNome] = useState("");
   const [email, setEmail] = useState("");
@@ -183,22 +183,19 @@ export default function EditarResponsavel({ navigation }) {
   // =========================
 
   return (
-    <SafeAreaView
-      style={[
-        styles.safeArea,
-        { backgroundColor: darkMode ? "#000" : "#e9e9eb" },
-      ]}
-    >
+   <SafeAreaView
+  style={[
+    styles.safeArea,
+    { backgroundColor: theme.colors.background },
+  ]}
+>
       <KeyboardAvoidingView
         style={{ flex: 1 }}
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         keyboardVerticalOffset={Platform.OS === "ios" ? 80 : 20}
       >
         <View
-          style={[
-            styles.container,
-            { backgroundColor: darkMode ? "#000" : "#e9e9eb" },
-          ]}
+           style={[styles.container, { backgroundColor: darkMode ? "#192230" : "#e9e9eb" }]}
         >
           <LinearGradient
             colors={["#000000", "#780b47"]}
@@ -227,7 +224,7 @@ export default function EditarResponsavel({ navigation }) {
                     styles.avatarWrapper,
                     {
                       borderColor: "#780b47",
-                      backgroundColor: darkMode ? "#1a1a1a" : "#fff",
+                      backgroundColor: darkMode ? "#192230" : "#fff",
                     },
                   ]}
                 >
@@ -240,7 +237,7 @@ export default function EditarResponsavel({ navigation }) {
                     <Ionicons
                       name="person"
                       size={100}
-                      color={darkMode ? "#fff" : "#000"}
+                      color={darkMode ? "#fff" : "#192230"}
                     />
                   )}
 
@@ -263,7 +260,7 @@ export default function EditarResponsavel({ navigation }) {
             <View
               style={[
                 styles.inputContainer,
-                { backgroundColor: darkMode ? "#1a1a1a" : "#fff" },
+                { backgroundColor: darkMode ? "#131b28ff" : "#fff" },
               ]}
             >
               <Text style={[styles.label, { color: darkMode ? "#fff" : "#555" }]}>

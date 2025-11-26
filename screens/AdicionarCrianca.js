@@ -71,7 +71,7 @@ const getMochilaId = async (sensorId) => {
 
 
 export default function AdicionarCrianca({ navigation }) {
-  const { darkMode } = useTheme();
+  const { darkMode, theme } = useTheme();
   const [nome, setNome] = useState("");
   const [dataNascimento, setDataNascimento] = useState("");
   const [escola, setEscola] = useState("");
@@ -161,12 +161,12 @@ export default function AdicionarCrianca({ navigation }) {
   };
 
   return (
-    <SafeAreaView
-      style={[
-        styles.safeArea,
-        { backgroundColor: darkMode ? "#000" : "#e9e9eb" },
-      ]}
-    >
+   <SafeAreaView
+  style={[
+    styles.safeArea,
+    { backgroundColor: theme.colors.background },
+  ]}
+>
       <LinearGradient
         colors={["#000000", "#780b47"]}
         start={{ x: 0, y: 0 }}
@@ -201,14 +201,14 @@ export default function AdicionarCrianca({ navigation }) {
                     styles.avatarWrapper,
                     {
                       borderColor: "#780b47",
-                      backgroundColor: darkMode ? "#1a1a1a" : "#fff",
+                      backgroundColor: darkMode ? "#192230" : "#fff",
                     },
                   ]}
                 >
                   <Ionicons
                     name="person"
-                    size={130}
-                    color={darkMode ? "#fff" : "#000000ff"}
+                    size={115}
+                    color={darkMode ? "#fff" : "#192230"}
                   />
                 </View>
                 <Text
@@ -228,7 +228,7 @@ export default function AdicionarCrianca({ navigation }) {
                 style={[
                   styles.input,
                   {
-                    backgroundColor: darkMode ? "#1a1a1a" : "#fff",
+                    backgroundColor: darkMode ? "#192230" : "#fff",
                     color: darkMode ? "#fff" : "#333",
                     borderColor: darkMode ? "#555" : "#ccc",
                   },
@@ -247,7 +247,7 @@ export default function AdicionarCrianca({ navigation }) {
                 style={[
                   styles.inputIcon,
                   {
-                    backgroundColor: darkMode ? "#1a1a1a" : "#fff",
+                    backgroundColor: darkMode ? "#192230" : "#fff",
                     borderColor: darkMode ? "#555" : "#ccc",
                   },
                 ]}
@@ -275,7 +275,7 @@ export default function AdicionarCrianca({ navigation }) {
                 style={[
                   styles.input,
                   {
-                    backgroundColor: darkMode ? "#1a1a1a" : "#fff",
+                    backgroundColor: darkMode ? "#192230" : "#fff",
                     color: darkMode ? "#fff" : "#333",
                     borderColor: darkMode ? "#555" : "#ccc",
                   },
@@ -294,7 +294,7 @@ export default function AdicionarCrianca({ navigation }) {
                 style={[
                   styles.inputIcon,
                   {
-                    backgroundColor: darkMode ? "#1a1a1a" : "#fff",
+                    backgroundColor: darkMode ? "#192230" : "#fff",
                     borderColor: darkMode ? "#555" : "#ccc",
                   },
                 ]}
@@ -321,9 +321,9 @@ export default function AdicionarCrianca({ navigation }) {
                 style={[
                   styles.input,
                   {
-                    backgroundColor: darkMode ? "#1a1a1a" : "#fff",
+                    backgroundColor: darkMode ? "#192230" : "#fff",
                     color: darkMode ? "#fff" : "#333",
-                    borderColor: darkMode ? "#555" : "#ccc",
+                    borderColor: darkMode ? "#434343ff" : "#ccc",
                   },
                 ]}
                 placeholder="Insira o ID do sensor"

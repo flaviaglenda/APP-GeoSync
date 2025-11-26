@@ -12,7 +12,7 @@ import { useIsFocused } from "@react-navigation/native";
 import { useTheme } from "../ThemeContext"; // <<< pega tema global
 
 export default function Notificacoes() {
-  const { darkMode } = useTheme(); // <<< pega darkMode global
+  const { darkMode, theme } = useTheme();
   const [notificacoes, setNotificacoes] = useState([]);
   const [limpado, setLimpado] = useState(false);
   const isFocused = useIsFocused();
@@ -34,7 +34,7 @@ export default function Notificacoes() {
   };
 
   return (
-    <View style={[styles.container, { backgroundColor: darkMode ? "#000" : "#e9e9eb" }]}>
+    <View   style={[styles.container, { backgroundColor: darkMode ? "#192230" : "#e9e9eb" }]}>
       <LinearGradient
         colors={["#000000ff", "#780b47"]}
         start={{ x: 0, y: 0 }}
@@ -64,8 +64,8 @@ export default function Notificacoes() {
               style={[
                 styles.card,
                 {
-                  backgroundColor: darkMode ? "#1a1a1a" : "#fff",
-                  borderColor: darkMode ? "#333" : "#ccc",
+                  backgroundColor: darkMode ? "#131b26ff" : "#fff",
+                  borderColor: darkMode ? "#828282ff" : "#ccc",
                 },
               ]}
             >

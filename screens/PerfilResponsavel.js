@@ -14,13 +14,16 @@ import { LinearGradient } from "expo-linear-gradient";
 import { useTheme } from "../ThemeContext"; 
 
 export default function PerfilResponsavel({ navigation }) {
-  const { darkMode, toggleTheme, theme } = useTheme(); 
+const { darkMode, theme, toggleTheme } = useTheme();
 
   return (
     <SafeAreaView
-      style={[styles.safeArea, { backgroundColor: darkMode ? "#000" : theme.colors.background }]}
-    >
-      <View style={[styles.container, { backgroundColor: darkMode ? "#000" : theme.colors.background }]}>
+     style={[
+       styles.safeArea,
+       { backgroundColor: theme.colors.background },
+     ]}
+   >
+      <View   style={[styles.container, { backgroundColor: darkMode ? "#192230" : "#e9e9eb" }]}>
         <LinearGradient
           colors={["#000000", "#780b47"]}
           start={{ x: 0, y: 0 }}
@@ -39,8 +42,8 @@ export default function PerfilResponsavel({ navigation }) {
           >
             <Ionicons
               name="person"
-              size={126}
-              color={darkMode ? "#fff" : "#000"}
+              size={110}
+              color={darkMode ? "#fff" : "#192230"}
             />
           </View>
         </View>

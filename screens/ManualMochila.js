@@ -5,7 +5,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { useTheme } from "../ThemeContext";
 
 export default function ManualMochila() {
-  const { darkMode } = useTheme();
+  const { darkMode, theme } = useTheme();
   const { width } = Dimensions.get("screen");
 
   return (
@@ -20,8 +20,7 @@ export default function ManualMochila() {
       </LinearGradient>
 
       <ScrollView
-        style={[styles.container, { backgroundColor: darkMode ? "#000" : "#e9e9eb" }]}
-        showsVerticalScrollIndicator={false}
+       style={[styles.container, { backgroundColor: darkMode ? "#192230" : "#e9e9eb" }]}
       >
         <Image
           source={require("../src/assets/img_manual.png")}
@@ -43,7 +42,7 @@ export default function ManualMochila() {
         </View>
 
         <View style={[styles.card, {
-          backgroundColor: darkMode ? "#1a1a1a" : "#f9f1f7",
+          backgroundColor: darkMode ? "#151d2aff" : "#f9f1f7",
           borderLeftColor: darkMode ? "#f61f7c" : "#96125B"
         }]}>
           <Text style={[styles.cardTitle, { color: darkMode ? "#f61f7c" : "#96125B" }]}>

@@ -14,7 +14,7 @@ import { FontAwesome, Ionicons } from "@expo/vector-icons";
 import { useTheme } from "../ThemeContext";
 
 export default function GerenciarCriancas({ navigation }) {
-  const { darkMode } = useTheme();
+  const { darkMode, theme } = useTheme();
 
   // agora o array é um estado pra podermos remover sem banco
   const [criancas, setCriancas] = useState([
@@ -28,17 +28,17 @@ export default function GerenciarCriancas({ navigation }) {
   };
 
   return (
-    <SafeAreaView
-      style={[
-        styles.safeArea,
-        { backgroundColor: darkMode ? "#000" : "#e9e9eb" },
-      ]}
-    >
+ <SafeAreaView
+  style={[
+    styles.safeArea,
+    { backgroundColor: theme.colors.background },
+  ]}
+>
       <View
-        style={[styles.container, { backgroundColor: darkMode ? "#000" : "#e9e9eb" }]}
+        style={[styles.container, { backgroundColor: darkMode ? "#192230" : "#e9e9eb" }]}
       >
         <LinearGradient
-          colors={["#000000", "#780b47"]}
+          colors={["#000000ff", "#780b47"]}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 0 }}
           style={styles.header}
@@ -58,20 +58,20 @@ export default function GerenciarCriancas({ navigation }) {
               key={item.id}
               style={[
                 styles.childCard,
-                { backgroundColor: darkMode ? "#1a1a1a" : "#fff" },
+                { backgroundColor: darkMode ? "#0d1727ff" : "#fff" },
               ]}
             >
               <View style={styles.childInfo}>
                 <Ionicons
                   name="person-circle-outline"
                   size={60}
-                  color={darkMode ? "#fff" : "#3f3d3dff"}
+                  color={darkMode ? "#fff" : "#182437ff"}
                 />
                 <View style={styles.childTextContainer}>
                   <Text
                     style={[
                       styles.childName,
-                      { color: darkMode ? "#fff" : "#333" },
+                      { color: darkMode ? "#fff" : "#182437ff" },
                     ]}
                   >
                     {item.nome}
@@ -79,7 +79,7 @@ export default function GerenciarCriancas({ navigation }) {
                   <Text
                     style={[
                       styles.childSchool,
-                      { color: darkMode ? "#aaa" : "#666" },
+                      { color: darkMode ? "#aaa" : "#182437ff" },
                     ]}
                   >
                     {item.escola}
@@ -104,7 +104,7 @@ export default function GerenciarCriancas({ navigation }) {
                   <FontAwesome
                     name="info-circle"
                     size={25}
-                    color={darkMode ? "#ffffffff" : "#161214ff"}
+                    color={darkMode ? "#ffffffff" : "#182437ff"}
                     style={{ marginRight: 15 }}
                   />
                 </TouchableOpacity>
@@ -114,7 +114,7 @@ export default function GerenciarCriancas({ navigation }) {
                   <FontAwesome
                     name="trash"
                     size={24}
-                    color={darkMode ? "#fff" : "#000"}
+                    color={darkMode ? "#fff" : "#182437ff"}
                   />
                 </TouchableOpacity>
               </View>
@@ -176,10 +176,10 @@ const styles = StyleSheet.create({
     borderRadius: 15,
     marginBottom: 15,
     elevation: 3,
-    shadowColor: "#530b30ff",
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.25,
-    shadowRadius: 2.25,
+    shadowColor: "#ffffffff",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.15,
+    shadowRadius: 1.25,
   },
   childInfo: {
     flexDirection: "row",

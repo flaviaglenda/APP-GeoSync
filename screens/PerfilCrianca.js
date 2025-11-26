@@ -18,18 +18,19 @@ import { LinearGradient } from "expo-linear-gradient";
 import { useTheme } from "../ThemeContext";
 
 export default function PerfilCrianca({ navigation }) {
-  const { darkMode } = useTheme();
+  const { darkMode, theme } = useTheme();
+
   const [escola, setEscola] = useState("SESI CAÇAPAVA");
   const [turma, setTurma] = useState("3° Ano fundamental");
   const [periodo, setPeriodo] = useState("07:00 - 15:30h");
 
   return (
     <SafeAreaView
-      style={[
-        styles.safeArea,
-        { backgroundColor: darkMode ? "#000" : "#e9e9eb" },
-      ]}
-    >
+  style={[
+    styles.safeArea,
+    { backgroundColor: theme.colors.background },
+  ]}
+>
       <KeyboardAvoidingView
         style={{ flex: 1 }}
         behavior={Platform.OS === "ios" ? "padding" : "height"}
@@ -37,10 +38,7 @@ export default function PerfilCrianca({ navigation }) {
       >
         <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
           <View
-            style={[
-              styles.container,
-              { backgroundColor: darkMode ? "#000" : "#e9e9eb" },
-            ]}
+           style={[styles.container, { backgroundColor: darkMode ? "#192230" : "#e9e9eb" }]}
           >
             <LinearGradient
               colors={["#000000", "#780b47"]}
@@ -72,7 +70,7 @@ export default function PerfilCrianca({ navigation }) {
                   <Ionicons
                     name="person"
                     size={100}
-                    color={darkMode ? "#fff" : "#000000ff"}
+                    color={darkMode ? "#fff" : "#192230"}
                   />
                   <TouchableOpacity style={styles.editIcon}>
                     <FontAwesome name="pencil" size={18} color="#fff" />
@@ -99,7 +97,7 @@ export default function PerfilCrianca({ navigation }) {
               <View
                 style={[
                   styles.inputContainer,
-                  { backgroundColor: darkMode ? "#1a1a1a" : "#fff" },
+                  { backgroundColor: darkMode ? "#0d1727ff" : "#fff" },
                 ]}
               >
                 <Text

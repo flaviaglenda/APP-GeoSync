@@ -7,7 +7,7 @@ import { supabase } from "../supabaseConfig";
 import { Polyline } from "react-native-maps";
 
 export default function MapScreen() {
-  const { darkMode } = useTheme();
+   const { darkMode, theme } = useTheme();
   const [mostrarHistorico, setMostrarHistorico] = useState(false);
   const [historico, setHistorico] = useState([]);
   const [posicao, setPosicao] = useState(null);
@@ -115,10 +115,7 @@ export default function MapScreen() {
       )}
       {/* painel informações */}
       <View
-        style={[
-          styles.infoContainer,
-          { backgroundColor: darkMode ? "#1a1a1a" : "#fff" },
-        ]}
+        style={[styles.container, { backgroundColor: darkMode ? "#192230" : "#e9e9eb" }]}
       >
         <Text style={[styles.nome, { color: darkMode ? "#f61f7c" : "#c2185b" }]}>Lucas</Text>
         <Text style={[styles.subtitulo, { color: darkMode ? "#ccc" : "#555" }]}>
@@ -135,7 +132,7 @@ export default function MapScreen() {
           <View
             style={[
               styles.statusBox,
-              { backgroundColor: darkMode ? "#2a2a2a" : "#000" },
+              { backgroundColor: darkMode ? "#0d1727ff" : "#0d1727ff" },
             ]}
           >
             <Text style={[styles.mocha, { color: darkMode ? "#fff" : "#fff" }]}>
