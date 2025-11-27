@@ -130,38 +130,38 @@ export default function AdicionarCrianca({ navigation }) {
   };
 
   /* ---------------- UPLOAD (igual PerfilCrianca) ---------------- */
- const uploadFoto = async (localUri, criancaId) => {
-  try {
-    // Corrige caminho do Android que dá erro
-    const uri = localUri.startsWith("file://")
-      ? localUri
-      : "file://" + localUri;
+  const uploadFoto = async (localUri, criancaId) => {
+    try {
+      // Corrige caminho do Android que dá erro
+      const uri = localUri.startsWith("file://")
+        ? localUri
+        : "file://" + localUri;
 
-    const response = await fetch(uri);
-    const blob = await response.blob();
+      const response = await fetch(uri);
+      const blob = await response.blob();
 
-    const fileName = `criancas/${criancaId}_${Date.now()}.jpg`;
+      const fileName = `criancas/${criancaId}_${Date.now()}.jpg`;
 
-    const { error: uploadError } = await supabase.storage
-      .from("fotos")
-      .upload(fileName, blob, {
-        upsert: true,
-        contentType: "image/jpeg",
-      });
+      const { error: uploadError } = await supabase.storage
+        .from("fotos")
+        .upload(fileName, blob, {
+          upsert: true,
+          contentType: "image/jpeg",
+        });
 
-    if (uploadError) {
-      console.log("Erro upload:", uploadError);
+      if (uploadError) {
+        console.log("Erro upload:", uploadError);
+        return null;
+      }
+
+      const { data } = supabase.storage.from("fotos").getPublicUrl(fileName);
+      return data.publicUrl;
+
+    } catch (e) {
+      console.log("Erro upload:", e);
       return null;
     }
-
-    const { data } = supabase.storage.from("fotos").getPublicUrl(fileName);
-    return data.publicUrl;
-
-  } catch (e) {
-    console.log("Erro upload:", e);
-    return null;
-  }
-};
+  };
 
   /* ---------------- ADICIONAR CRIANÇA ---------------- */
   const handleAdicionar = async () => {
@@ -188,9 +188,25 @@ export default function AdicionarCrianca({ navigation }) {
       }
 
       let mochila_id = null;
-      if (sensorId) mochila_id = await getMochilaId(sensorId);
 
-      // Primeiro cria a criança
+      if (sensorId) {
+        
+        const { data: mochila, error } = await supabase
+          .from("mochilas")
+          .select("id")
+          .eq("nome", sensorId) 
+          .single();
+
+        if (error || !mochila) {
+          Alert.alert("Erro", "Mochila inválida!");
+          setLoading(false);
+          return; 
+        }
+
+        mochila_id = mochila.id;
+      }
+
+     
       const { data: criada, error: createError } = await supabase
         .from("criancas")
         .insert([
@@ -227,7 +243,7 @@ export default function AdicionarCrianca({ navigation }) {
       }
 
       Alert.alert("Sucesso", `${nome} foi adicionada!`);
-      navigation.navigate("GerenciarCrianca");
+      navigation.navigate("listarCrianca");
 
     } catch (e) {
       Alert.alert("Erro", "Erro inesperado.");
@@ -430,7 +446,7 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingTop: Platform.OS === "android" ? StatusBar.currentHeight : 0,
   },
-  flex: { flex: 1 },header: {
+  flex: { flex: 1 }, header: {
     marginTop: -30,
     height: 95,
     flexDirection: "row",

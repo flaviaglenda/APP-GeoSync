@@ -6,176 +6,304 @@ import { useTheme } from "../ThemeContext";
 import { supabase } from "../supabaseConfig";
 import * as Notifications from "expo-notifications";
 
-export default function Localizacao() {
-  const { darkMode, theme } = useTheme();
-  const [alertaEnviado, setAlertaEnviado] = useState(false);
-  const alertaEnviadoRef = useRef(false);
-  const [mostrarHistorico, setMostrarHistorico] = useState(false);
-  const [historico, setHistorico] = useState([]);
+export default function Localizacao({ route, navigation }) {
+  if (!route || !route.params) {
+    console.log("ERRO: route.params está vazio!");
+    return <Text>Erro: nenhuma informação recebida.</Text>;
+  }
+
+  const { id } = route.params; // id da criança
+  const { darkMode } = useTheme();
+
+  const [crianca, setCrianca] = useState(null);
+  const [mochilaId, setMochilaId] = useState(null);
   const [posicao, setPosicao] = useState(null);
+  const [areaSegura, setAreaSegura] = useState(null);
+  const [historico, setHistorico] = useState([]);
+  const [mostrarHistorico, setMostrarHistorico] = useState(false);
   const [carregando, setCarregando] = useState(true);
-
-  // AREA SEGURA
+  const alertaEnviadoRef = useRef(false);
+  const [alertaEnviado, setAlertaEnviado] = useState(false);
   const [modoAreaSegura, setModoAreaSegura] = useState(false);
-  const [areaSegura, setAreaSegura] = useState(null); // {latitude, longitude, raio}
 
-  // --- FUNÇÃO DISTÂNCIA (Haversine)
+  // --- FUNÇÃO DISTÂNCIA (Haversine) retorna metros
   function calcularDistancia(lat1, lon1, lat2, lon2) {
     const R = 6371e3;
     const toRad = (v) => (v * Math.PI) / 180;
-
     const dLat = toRad(lat2 - lat1);
     const dLon = toRad(lon2 - lon1);
-
+    
     const a =
       Math.sin(dLat / 2) ** 2 +
       Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) ** 2;
 
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-
     return R * c;
+    
   }
+  
 
+  // calcula distância em km entre a posição atual e a área segura (se existir)
+  const distanciaKm =
+    posicao && areaSegura
+      ? (calcularDistancia(areaSegura.latitude, areaSegura.longitude, posicao.latitude, posicao.longitude) / 1000).toFixed(2)
+      : "—";
 
-  function verificarDistancia(local) {
-    if (!areaSegura) return;
-
-    const distancia = calcularDistancia(
-      Number(areaSegura.latitude),
-      Number(areaSegura.longitude),
-      Number(local.latitude),
-      Number(local.longitude)
-    );
-
-    console.log("=== VERIFICANDO DISTÂNCIA ===");
-    console.log("Local atual:", local.latitude, local.longitude);
-    console.log("Área segura:", areaSegura.latitude, areaSegura.longitude, areaSegura.raio);
-    console.log("Distância calculada:", distancia);
-    console.log("foraDaArea =", distancia > areaSegura.raio);
-    console.log("=============================");
-    async function enviarNotificacaoLocal() {
-      await Notifications.scheduleNotificationAsync({
-        content: {
-          title: "⚠️ Alerta de Segurança",
-          body: "A criança saiu da área segura!",
-        },
-        trigger: null, // dispara imediatamente
-      });
-    }
-    console.log("Distância:", distancia, "m");
-
-    const foraDaArea = distancia > areaSegura.raio;
-
-    if (foraDaArea) {
-      if (!alertaEnviadoRef.current) {
-        Alert.alert("⚠️ Alerta!", "A criança saiu da área segura!");
-        alertaEnviadoRef.current = true;
-        setAlertaEnviado(true);
-        salvarNotificacaoNoBanco("fora_da_area", "A criança saiu da área segura!");
-        enviarNotificacaoLocal();
-      }
-    } else {
-      if (alertaEnviadoRef.current) {
-        console.log("Voltou para a área, alerta resetado");
-        alertaEnviadoRef.current = false;
-        setAlertaEnviado(false);
-      }
-    }
-  }
-
-
-  async function salvarNotificacaoNoBanco(tipo, mensagem) {
+  // 1) Buscar dados da criança (nome, escola, mochila_id)
+  async function carregarDadosCrianca() {
+  try {
     const { data, error } = await supabase
-      .from("notificacoes")
-      .insert([{
-        mochila_id: 1,
-        tipo_alerta: tipo,
-        mensagem: mensagem,
-        lida: false,
-        data_hora: new Date()
-      }]);
+      .from("criancas")
+      .select("id, nome, escola, mochila_id")
+      .eq("id", id)
+      .single();
 
     if (error) {
-      console.log("Erro ao salvar notificação:", error);
-    } else {
-      console.log("Notificação salva no banco:", data);
-    }
-  }
-
-  async function buscarUltimaLocalizacao() {
-    const { data, error } = await supabase
-      .from("gps_dados")
-      .select("*")
-      .eq("mochila_id", 1)
-      .order("data_hora", { ascending: false })
-      .limit(1);
-    if (!error && data.length > 0) {
-
-      setPosicao(data[0]);
-
-      if (areaSegura) {
-        verificarDistancia(data[0]);
-      }
-    }
-    setCarregando(false);
-  }
-  async function carregarAreaSegura() {
-    const { data, error } = await supabase
-      .from("areas_seguras")
-      .select("*")
-      .eq("mochila_id", 1)
-      .limit(1);
-
-    if (error) {
-      console.log("Erro ao carregar área segura:", error);
+      console.log("Erro ao carregar criança:", error);
       return;
     }
 
-    if (data.length > 0) {
-      setAreaSegura({
-        latitude: Number(data[0].latitude),
-        longitude: Number(data[0].longitude),
-        raio: Number(data[0].raio)
-      });
-      console.log("Área segura carregada do banco:", data[0]);
+    setCrianca(data);
+    setMochilaId(data.mochila_id);
+
+    // chama a função para carregar o nome da mochila
+    carregarNomeMochila(data.mochila_id);
+
+  } catch (err) {
+    console.log("Erro inesperado ao buscar criança:", err);
+  }
+}
+
+  // 2) Buscar última localização da mochila específica
+  async function buscarUltimaLocalizacao() {
+    if (!mochilaId) return;
+    try {
+      const { data, error } = await supabase
+        .from("gps_dados")
+        .select("*")
+        .eq("mochila_id", mochilaId)
+        .order("data_hora", { ascending: false })
+        .limit(1);
+
+      if (error) {
+        console.log("Erro ao buscar ultima localizacao:", error);
+        return;
+      }
+
+      if (data && data.length > 0) {
+        setPosicao(data[0]);
+        // verifica distância imediatamente se já tiver area segura
+        if (areaSegura) verificarDistancia(data[0]);
+      } else {
+        console.log("Nenhuma localização encontrada para mochila:", mochilaId);
+      }
+    } finally {
+      setCarregando(false);
     }
   }
 
-  // HISTÓRICO
+ async function carregarNomeMochila(idMochila) {
+  if (!idMochila) return;
+  try {
+    const { data, error } = await supabase
+      .from("mochilas")
+      .select("nome")
+      .eq("id", idMochila)
+      .single();
+
+    if (error) {
+      console.log("Erro ao carregar nome da mochila:", error);
+      return;
+    }
+
+    setCrianca(prev => ({ ...prev, mochila_nome: data.nome }));
+  } catch (err) {
+    console.log("Erro inesperado ao buscar nome da mochila:", err);
+  }
+}
+
+  async function carregarAreaSegura() {
+    if (!mochilaId) return;
+    try {
+      const { data, error } = await supabase
+        .from("areas_seguras")
+        .select("*")
+        .eq("mochila_id", mochilaId)
+        .limit(1);
+
+      if (error) {
+        console.log("Erro ao carregar área segura:", error);
+        return;
+      }
+
+      if (data && data.length > 0) {
+        setAreaSegura({
+          latitude: Number(data[0].latitude),
+          longitude: Number(data[0].longitude),
+          raio: Number(data[0].raio),
+        });
+        console.log("Área segura carregada do banco:", data[0]);
+      } else {
+        console.log("Nenhuma área segura configurada para mochila:", mochilaId);
+        setAreaSegura(null);
+      }
+    } catch (err) {
+      console.log("Erro carregarAreaSegura:", err);
+    }
+  }
+
+  // 4) Criar ou atualizar area segura no banco (usa upsert para garantir criação se não houver)
+  async function salvarAreaSeguraNoBanco(latitude, longitude, raio) {
+    if (!mochilaId) return;
+
+    // primeiro tentamos atualizar
+    const { data: updated, error: updateError } = await supabase
+      .from("areas_seguras")
+      .update({ latitude, longitude, raio })
+      .eq("mochila_id", mochilaId);
+
+    if (updateError) {
+      console.log("Erro ao atualizar área segura:", updateError);
+    }
+
+    if (!updated || updated.length === 0) {
+      // se não tinha linha, inserimos
+      const { data: inserted, error: insertError } = await supabase
+        .from("areas_seguras")
+        .insert([{ mochila_id: mochilaId, latitude, longitude, raio }]);
+
+      if (insertError) {
+        console.log("Erro ao criar área segura:", insertError);
+        Alert.alert("Erro", "Não foi possível salvar a área segura.");
+        return;
+      }
+      console.log("Área segura criada:", inserted);
+    } else {
+      console.log("Área segura atualizada:", updated);
+    }
+
+    carregarAreaSegura();
+    Alert.alert("Sucesso", "Área segura salva!");
+  }
+
+  // 5) Histórico — trazer todos os pontos **da mochila** e mostrar como Polyline
   async function carregarHistorico() {
-    // Se já está mostrando → vai esconder
+    if (!mochilaId) {
+      Alert.alert("Aguarde", "Carregando dados da mochila...");
+      return;
+    }
+
+    // se já está mostrando → alterna para esconder
     if (mostrarHistorico) {
       setMostrarHistorico(false);
       return;
     }
 
-    // Se NÃO está mostrando → vai carregar do banco
-    const { data, error } = await supabase
-      .from("gps_dados")
-      .select("*")
-      .eq("mochila_id", 1)
-      .order("data_hora", { ascending: true });
+    try {
+      const { data, error } = await supabase
+        .from("gps_dados")
+        .select("*")
+        .eq("mochila_id", mochilaId)
+        .order("data_hora", { ascending: true });
 
-    if (!error) {
-      setHistorico(data);
+      if (error) {
+        console.log("Erro ao carregar histórico:", error);
+        return;
+      }
+
+      // filtra/garante pontos válidos e converte para números
+      const pontos = (data || []).map((p) => ({
+        latitude: Number(p.latitude),
+        longitude: Number(p.longitude),
+        data_hora: p.data_hora,
+      }));
+
+      setHistorico(pontos);
       setMostrarHistorico(true);
+    } catch (err) {
+      console.log("Erro carregarHistorico:", err);
     }
   }
 
-  useEffect(() => {
-  if (posicao && areaSegura) {
-    verificarDistancia(posicao);
-  }
-}, [posicao, areaSegura]);
+  // 6) Verificar distância e disparar alerta
+ function verificarDistancia(local) {
+  if (!areaSegura || !local) return;
 
+  const distancia = calcularDistancia(
+    Number(areaSegura.latitude),
+    Number(areaSegura.longitude),
+    Number(local.latitude),
+    Number(local.longitude)
+  );
+
+  const foraDaArea = distancia > Number(areaSegura.raio);
+
+  console.log({
+    areaLat: areaSegura.latitude,
+    areaLng: areaSegura.longitude,
+    posicaoLat: local.latitude,
+    posicaoLng: local.longitude,
+    distancia,
+    foraDaArea,
+    raio: areaSegura.raio,
+  });
+
+  // dispara alerta apenas se ainda não foi enviado
+  if (foraDaArea && !alertaEnviadoRef.current) {
+    Alert.alert("⚠️ Alerta!", "A criança saiu da área segura!");
+    Notifications.scheduleNotificationAsync({
+      content: { title: "⚠️ Alerta de Segurança", body: "A criança saiu da área segura!" },
+      trigger: null,
+    });
+    alertaEnviadoRef.current = true;
+  }
+
+  // Atualiza o estado do ícone
+  setAlertaEnviado(foraDaArea);
+
+  // Reseta o ref caso a criança volte para dentro da área
+  if (!foraDaArea && alertaEnviadoRef.current) {
+    alertaEnviadoRef.current = false;
+  }
+}
+  async function salvarNotificacaoNoBanco(tipo, mensagem) {
+    try {
+      const { data, error } = await supabase.from("notificacoes").insert([{
+        mochila_id: mochilaId,
+        tipo_alerta: tipo,
+        mensagem,
+        lida: false,
+        data_hora: new Date()
+      }]);
+      if (error) console.log("Erro ao salvar notificação:", error);
+      else console.log("Notificação salva:", data);
+    } catch (err) {
+      console.log("Erro salvarNotificacaoNoBanco:", err);
+    }
+  }
+
+  // EFEITOS
+  // buscar dados da criança ao montar (e sempre que id mudar)
   useEffect(() => {
+    setCarregando(true);
+    carregarDadosCrianca();
+  }, [id]);
+
+  // quando mochilaId estiver disponível → carregar área + última posição + iniciar polling
+  useEffect(() => {
+    if (!mochilaId) return;
     carregarAreaSegura();
     buscarUltimaLocalizacao();
     const interval = setInterval(buscarUltimaLocalizacao, 5000);
     return () => clearInterval(interval);
-  }, []);
+  }, [mochilaId]);
 
-  // REGIÃO DO MAPA
+  // check sempre que posicao/area mudarem
+  useEffect(() => {
+    if (posicao && areaSegura) verificarDistancia(posicao);
+  }, [posicao, areaSegura]);
+
+  // REGIÃO DO MAPA (padrão se posicao undefined)
   const region = {
     latitude: posicao?.latitude || -23.099,
     longitude: posicao?.longitude || -45.707,
@@ -183,152 +311,127 @@ export default function Localizacao() {
     longitudeDelta: 0.01,
   };
 
+
+  
   function ativarModoAreaSegura() {
-    setModoAreaSegura(true);
-    Alert.alert("Modo Área Segura", "Clique no mapa para definir o ponto seguro.");
-  }
-  async function salvarAreaSeguraNoBanco(latitude, longitude, raio) {
-
-    const { data, error } = await supabase
-      .from("areas_seguras")
-      .update({
-        latitude,
-        longitude,
-        raio
-      })
-      .eq("mochila_id", 1);
-
-    if (error) console.log("Erro ao salvar:", error);
-    else {
-      alert("Área segura atualizada!");
-      carregarAreaSegura();
+    if (!mochilaId) {
+      Alert.alert("Aguarde", "Ainda carregando dados da mochila.");
+      return;
     }
+    setModoAreaSegura(true);
+    Alert.alert("Modo Área Segura", "Toque no mapa para definir o ponto seguro.");
   }
 
+  // salva área quando o usuário clica no mapa (use esse onPress no MapView)
+  async function onMapPressSalvarArea(e) {
+    if (!modoAreaSegura) return;
+    const { latitude, longitude } = e.nativeEvent.coordinate;
+    setAreaSegura({ latitude, longitude, raio: 150 });
+    setModoAreaSegura(false);
+    await salvarAreaSeguraNoBanco(latitude, longitude, 150);
+  }
 
+  // RENDER
   return (
     <View style={[styles.container, { backgroundColor: darkMode ? "#000" : "#fff" }]}>
-      {carregando ? (
-        <ActivityIndicator size="large" color="#ff0099" style={{ marginTop: 50 }} />
-      ) : (
-        <MapView
-          style={styles.map}
-          region={region}
-          onPress={(e) => {
-            if (modoAreaSegura) {
-              const { latitude, longitude } = e.nativeEvent.coordinate;
-              setAreaSegura({ latitude, longitude, raio: 150 });
-              setModoAreaSegura(false);
-              salvarAreaSeguraNoBanco(latitude, longitude, 150);
-            }
-          }}
-        >
-          {posicao && (
-            <Marker
-              coordinate={{ latitude: posicao.latitude, longitude: posicao.longitude }}
-              title="Localização Atual"
-              description={`Atualizado em: ${new Date(posicao.data_hora).toLocaleTimeString()}`}
-            />
-          )}
-
-          {mostrarHistorico && (
-            <Polyline
-              coordinates={historico.map(p => ({
-                latitude: p.latitude,
-                longitude: p.longitude
-              }))}
-              strokeWidth={4}
-              strokeColor="#ff0099"
-            />
-          )}
-
-          {areaSegura && (
-            <Circle
-              center={{
-                latitude: areaSegura.latitude,
-                longitude: areaSegura.longitude
-              }}
-              radius={areaSegura.raio}
-              strokeWidth={2}
-              strokeColor="#ff0099"
-              fillColor="rgba(255,0,153,0.15)"
-            />
-          )}
-        </MapView>
+  {carregando ? (
+    <ActivityIndicator size="large" color="#ff0099" style={{ marginTop: 50 }} />
+  ) : (
+    <MapView
+      style={styles.map}
+      region={region}
+      onPress={onMapPressSalvarArea}
+    >
+      {posicao && (
+        <Marker
+          coordinate={{ latitude: posicao.latitude, longitude: posicao.longitude }}
+          title="Localização Atual"
+          description={`Atualizado em: ${new Date(posicao.data_hora).toLocaleString()}`}
+        />
       )}
-      {/* painel informações */}
-      <View
-      pointerEvents="box-none"
-        style={[styles.container, { backgroundColor: darkMode ? "#192230" : "#e9e9eb" }]}
-      >
-        <Text style={[styles.nome, { color: darkMode ? "#f61f7c" : "#c2185b" }]}>Lucas</Text>
-        <Text style={[styles.subtitulo, { color: darkMode ? "#ccc" : "#555" }]}>
-          SESI-Caçapava
+
+      {/* Histórico da criança selecionada */}
+      {mostrarHistorico && historico.length > 0 && (
+        <Polyline
+          coordinates={historico.map(p => ({ latitude: p.latitude, longitude: p.longitude }))}
+          strokeWidth={4}
+          strokeColor="#ff0099"
+        />
+      )}
+
+      {/* Área segura da criança */}
+      {areaSegura && (
+        <Circle
+          center={{ latitude: areaSegura.latitude, longitude: areaSegura.longitude }}
+          radius={areaSegura.raio}
+          strokeWidth={2}
+          strokeColor="#ff0099"
+          fillColor="rgba(255,0,153,0.15)"
+        />
+      )}
+    </MapView>
+  )}
+
+  {/* Painel inferior */}
+  <View
+    pointerEvents="box-none"
+    style={[styles.panel, { backgroundColor: darkMode ? "#192230" : "#e9e9eb",padding: 20, marginBottom: 50 }]}
+  >
+    <Text style={[styles.nome, { color: darkMode ? "#f61f7c" : "#c2185b" }]}>
+      {crianca?.nome || "—"}
+    </Text>
+    <Text style={[styles.subtitulo, { color: darkMode ? "#ccc" : "#555" }]}>
+      {crianca?.escola || "—"}
+    </Text>
+    <Text style={[styles.distancia, { color: darkMode ? "#aaa" : "#777" }]}>
+      {distanciaKm} km de distância
+    </Text>
+
+    <View style={styles.statusContainer}>
+      <Text style={[styles.statusTitle, { color: darkMode ? "#fff" : "#000" }]}>Status</Text>
+      <View style={[styles.statusBox, { backgroundColor: darkMode ? "#0d1727ff" : "#0d1727ff" }]}>
+        <Text style={[styles.mocha, { color: "#fff" }]}>
+          {crianca ? `Mochila: ${crianca.mochila_nome || ""}` : "—"}
         </Text>
-        <Text style={[styles.distancia, { color: darkMode ? "#aaa" : "#777" }]}>
-          2 km de distância
-        </Text>
-
-
-
-        <View style={styles.statusContainer}>
-          <Text style={[styles.statusTitle, { color: darkMode ? "#fff" : "#000" }]}>
-            Status
-          </Text>
-          <View
-            style={[
-              styles.statusBox,
-              { backgroundColor: darkMode ? "#0d1727ff" : "#0d1727ff" },
-            ]}
-          >
-            <Text style={[styles.mocha, { color: darkMode ? "#fff" : "#fff" }]}>
-              Mochila GeoKid Pro - Lucas
-            </Text>
-            <View style={styles.statusRow}>
-              <MaterialIcons
-                name="wifi-off"
-                size={20}
-                color={darkMode ? "#fff" : "#fff"}
-              />
-              <Text style={[styles.semConexao, { color: darkMode ? "#fff" : "#fff" }]}>
-                {" "}Sem conexão.
-              </Text>
-              <Text style={[styles.bateria, { color: darkMode ? "#ffffffff" : "#fff" }]}>
-                {" "}100%
-              </Text>
-            </View>
-            <Text style={[styles.atualizacao, { color: darkMode ? "#bbb" : "#bbb" }]}>
-              Última atualização há 1 hora.
-            </Text>
-            <Ionicons
-              name="warning-outline"
-              size={32}
-              color="#ff0099"
-              style={styles.iconAlerta}
-            />
-          </View>
+        <View style={styles.statusRow}>
+          <MaterialIcons name="wifi-off" size={20} color="#fff" />
+          <Text style={[styles.semConexao, { color: "#fff" }]}> Sem conexão.</Text>
+          <Text style={[styles.bateria, { color: "#fff" }]}> 100%</Text>
         </View>
+        <Text style={[styles.atualizacao, { color: "#bbb" }]}>
+          Última atualização: {posicao ? new Date(posicao.data_hora).toLocaleString() : "—"}
+        </Text>
 
-        {/* BOTÕES */}
-        <TouchableOpacity onPress={carregarHistorico}
-          style={[styles.botaoHistorico, { backgroundColor: darkMode ? "#780b47" : "#000" }]}
-        >
-          <Ionicons name="time-outline" size={20} color="#fff" />
-          <Text style={styles.textoBotao}>Histórico</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity onPress={ativarModoAreaSegura}
-          style={[styles.botaoHistorico, { backgroundColor: "#ff0099" }]}
-        >
-          <Ionicons name="map-outline" size={20} color="#fff" />
-          <Text style={styles.textoBotao}>Criar Área Segura</Text>
-        </TouchableOpacity>
-
-
-
-
+        {/* Ícone de alerta visível apenas quando fora da área segura */}
+        {alertaEnviado && (
+          <Ionicons
+            name="warning-outline"
+            size={32}
+            color="#ff0099"
+            style={{ position: "absolute", top: 10, right: 10, zIndex: 999 }}
+          />
+        )}
       </View>
     </View>
+
+    {/* Botões */}
+    <TouchableOpacity
+      onPress={carregarHistorico}
+      style={[styles.botaoHistorico, { backgroundColor: darkMode ? "#780b47" : "#000" }]}
+    >
+      <Ionicons name="time-outline" size={20} color="#fff" />
+      <Text style={styles.textoBotao}>Histórico</Text>
+    </TouchableOpacity>
+
+    <TouchableOpacity
+      onPress={ativarModoAreaSegura}
+      style={[styles.botaoHistorico, { backgroundColor: "#ff0099" }]}
+    >
+      <Ionicons name="map-outline" size={20} color="#fff" />
+      <Text style={styles.textoBotao}>Criar Área Segura</Text>
+    </TouchableOpacity>
+  </View>
+</View>
   );
 }
 const styles = StyleSheet.create({

@@ -1,4 +1,4 @@
-
+import React, { useState, useEffect } from "react";
 import {
     View,
     Text,
@@ -13,31 +13,41 @@ import { LinearGradient } from "expo-linear-gradient";
 import { FontAwesome, Ionicons } from "@expo/vector-icons";
 import { useTheme } from "../ThemeContext";
 import { supabase } from "../supabaseConfig";
-import { useEffect, useState } from "react";
+import { useFocusEffect } from '@react-navigation/native';
 
 export default function GerenciarCriancas({ navigation }) {
     const { darkMode } = useTheme();
 
-    // agora o array é um estado pra podermos remover sem banco
     const [criancas, setCriancas] = useState([]);
-
     const [carregando, setCarregando] = useState(true);
-    // função pra remover criança
-    const removerCrianca = (id) => {
-        setCriancas((prev) => prev.filter((item) => item.id !== id));
-    };
 
     useEffect(() => {
         buscarCriancas();
     }, []);
 
+    useFocusEffect(
+        React.useCallback(() => {
+            buscarCriancas();
+        }, [])
+    );
 
     async function buscarCriancas() {
         setCarregando(true);
 
+        // Obtém o usuário logado
+        const { data: userData } = await supabase.auth.getUser();
+        const user = userData?.user;
+
+        if (!user) {
+            console.log("Nenhum usuário logado.");
+            setCarregando(false);
+            return;
+        }
+
         const { data, error } = await supabase
             .from("criancas")
-            .select("*");
+            .select("*")
+            .eq("usuario_id", user.id); // Filtra as crianças do responsável
 
         if (error) {
             console.log("Erro ao buscar crianças:", error);
@@ -46,6 +56,11 @@ export default function GerenciarCriancas({ navigation }) {
         }
 
         setCarregando(false);
+    }
+
+    async function removerCrianca(id) {
+        await supabase.from("criancas").delete().eq("id", id);
+        buscarCriancas();
     }
     return (
         <SafeAreaView
@@ -63,88 +78,66 @@ export default function GerenciarCriancas({ navigation }) {
                     end={{ x: 1, y: 0 }}
                     style={styles.header}
                 >
-    
-                    <Text style={styles.headerText}>Rastreadores</Text>
+                    
+                    <Text style={styles.headerText}>RASTREADORES</Text>
                 </LinearGradient>
 
-                {carregando && (
-                    <Text style={{ textAlign: "center", marginTop: 20, fontSize: 18 }}>
+                {carregando ? (
+                    <Text style={{ textAlign: "center", marginTop: 40, fontSize: 18 }}>
                         Carregando crianças...
                     </Text>
-                )}
-
-
-                <ScrollView contentContainerStyle={styles.scrollContainer}>
-                    {criancas.map((item) => (
-                        <TouchableOpacity
-                            key={item.id}
-                            style={[
-                                styles.childCard,
-                                { backgroundColor: darkMode ? "#1a1a1a" : "#fff" },
-                            ]}
-                            onPress={() =>
-                                navigation.navigate("Localizacao", {
-                                    id: item.id,
-                                    nome: item.nome,
-                                    escola: item.escola,
-                                })
-                            }
-                        >
-                            <View style={styles.childInfo}>
-                                <Ionicons
-                                    name="person-circle-outline"
-                                    size={60}
-                                    color={darkMode ? "#fff" : "#3f3d3dff"}
-                                />
-                                <View style={styles.childTextContainer}>
-                                    <Text
-                                        style={[
-                                            styles.childName,
-                                            { color: darkMode ? "#fff" : "#333" },
-                                        ]}
-                                    >
-                                        {item.nome}
-                                    </Text>
-                                    <Text
-                                        style={[
-                                            styles.childSchool,
-                                            { color: darkMode ? "#aaa" : "#666" },
-                                        ]}
-                                    >
-                                        {item.escola}
-                                    </Text>
+                ) : (
+                    <ScrollView contentContainerStyle={styles.scrollContainer}>
+                        {criancas.map((item) => (
+                            <TouchableOpacity
+                                key={item.id}
+                                style={[
+                                    styles.childCard,
+                                    { backgroundColor: darkMode ? "#1a1a1a" : "#fff" },
+                                ]}
+                                onPress={() =>
+                                    navigation.navigate("Localizacao", {
+                                        id: item.id,
+                                        nome: item.nome,
+                                        escola: item.escola,
+                                    })
+                                }
+                            >
+                                <View style={styles.childInfo}>
+                                    <Ionicons
+                                        name="person-circle-outline"
+                                        size={60}
+                                        color={darkMode ? "#fff" : "#3f3d3dff"}
+                                    />
+                                    <View style={styles.childTextContainer}>
+                                        <Text
+                                            style={[
+                                                styles.childName,
+                                                { color: darkMode ? "#fff" : "#333" },
+                                            ]}
+                                        >
+                                            {item.nome}
+                                        </Text>
+                                        <Text
+                                            style={[
+                                                styles.childSchool,
+                                                { color: darkMode ? "#aaa" : "#666" },
+                                            ]}
+                                        >
+                                            {item.escola}
+                                        </Text>
+                                    </View>
                                 </View>
-                            </View>
 
-                            <View style={styles.iconContainer}>
-                                {item.alerta && (
-                                    <FontAwesome
-                                        name="exclamation-triangle"
-                                        size={25}
-                                        color={darkMode ? "#be1a74ff" : "#5b133aff"}
-                                        style={{ marginRight: 15 }}
-                                    />
-                                )}
+                                <View style={styles.iconContainer}>
 
-                                {/* Ícone de informação */}
-                                <TouchableOpacity
-                                    onPress={() => navigation.navigate("PerfilCrianca")}
-                                >
-                                    <FontAwesome
-                                        name="info-circle"
-                                        size={25}
-                                        color={darkMode ? "#ffffffff" : "#161214ff"}
-                                        style={{ marginRight: 15 }}
-                                    />
-                                </TouchableOpacity>
+                                </View>
+                            </TouchableOpacity>
+                        ))}
 
-                            
-                            </View>
-                        </TouchableOpacity>
-                    ))}
 
-                   
-                </ScrollView>
+                    </ScrollView>
+                )}
             </View>
         </SafeAreaView>
     );
