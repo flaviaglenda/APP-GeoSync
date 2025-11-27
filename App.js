@@ -1,10 +1,11 @@
-import React from "react";
+import React, { useEffect } from "react";
 import {
   View,
   Text,
   TouchableOpacity,
   Image,
   StyleSheet,
+  Platform,
 } from "react-native";
 import { NavigationContainer } from "@react-navigation/native";
 import {
@@ -14,7 +15,6 @@ import {
 } from "@react-navigation/drawer";
 import { createStackNavigator } from "@react-navigation/stack";
 import { FontAwesome5 } from "@expo/vector-icons";
-
 
 import Comeco from "./screens/comeco";
 import Login from "./screens/RealizarLogin";
@@ -30,14 +30,17 @@ import GerenciarCrianca from "./screens/GerenciarCrianca";
 import PerfilCrianca from "./screens/PerfilCrianca";
 import AdicionarCrianca from "./screens/AdicionarCrianca";
 import Splas from "./screens/SplashScreen";
+import listarCrianca from "./screens/listarCrianca";
+import { MapScreen, ConfigAreas } from "./screens/Map_and_Config_Areas";
 
 import { ThemeProvider } from "./ThemeContext";
 import * as Notifications from "expo-notifications";
 
+// HANDLER GLOBAL DAS NOTIFICAÇÕES
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
     shouldShowAlert: true,
-    shouldPlaySound: false,
+    shouldPlaySound: true,
     shouldSetBadge: false,
   }),
 });
@@ -46,81 +49,23 @@ const Drawer = createDrawerNavigator();
 const Stack = createStackNavigator();
 const PerfilStack = createStackNavigator();
 
+// PERFIL STACK
 function PerfilStackNavigator() {
   return (
     <PerfilStack.Navigator screenOptions={{ headerShown: false }}>
-      <PerfilStack.Screen
-        name="PerfilResponsavel"
-        component={PerfilResponsavel}
-      />
-      <PerfilStack.Screen
-        name="EditarResponsavel"
-        component={EditarResponsavel}
-      />
-      <PerfilStack.Screen
-        name="GerenciarCrianca"
-        component={GerenciarCrianca}
-      />
-      <PerfilStack.Screen
-        name="PerfilCrianca"
-        component={PerfilCrianca}
-      />
-      <PerfilStack.Screen
-        name="AdicionarCrianca"
-        component={AdicionarCrianca}
-      />
+      <PerfilStack.Screen name="PerfilResponsavel" component={PerfilResponsavel} />
+      <PerfilStack.Screen name="EditarResponsavel" component={EditarResponsavel} />
+      <PerfilStack.Screen name="GerenciarCrianca" component={GerenciarCrianca} />
+      <PerfilStack.Screen name="PerfilCrianca" component={PerfilCrianca} />
+      <PerfilStack.Screen name="AdicionarCrianca" component={AdicionarCrianca} />
     </PerfilStack.Navigator>
   );
 }
 
-function DrawerNavigator() {
-  return (
-    <Drawer.Navigator
-      screenOptions={({ navigation }) => ({
-        headerStyle: { backgroundColor: "#000" },
-        headerTintColor: "#fff",
-        headerTitle: "",
-        headerLeft: () => (
-          <TouchableOpacity onPress={() => navigation.openDrawer()}>
-            <FontAwesome5
-              name="bars"
-              size={20}
-              color="#fff"
-              style={{ marginLeft: 15 }}
-            />
-          </TouchableOpacity>
-        ),
-        headerRight: () => (
-          <Image
-            source={require("./src/assets/logo_geosync_fundotransparente.png")}
-            style={{
-              width: 200,
-              height: 200,
-              marginRight: -55,
-              marginTop: 35,
-            }}
-            resizeMode="contain"
-          />
-        ),
-        drawerStyle: { backgroundColor: "#000" },
-      })}
-      drawerContent={(props) => <CustomDrawerContent {...props} />}
-    >
-      <Drawer.Screen name="Home" component={Home} />
-      <Drawer.Screen name="Notificações" component={Notificacoes} />
-      <Drawer.Screen name="Perfil" component={PerfilStackNavigator} />
-      <Drawer.Screen name="Localização" component={Localizacao} />
-      <Drawer.Screen name="Manual" component={ManualMochila} />
-    </Drawer.Navigator>
-  );
-}
-
+// MENU LATERAL
 function CustomDrawerContent(props) {
   return (
-    <DrawerContentScrollView
-      {...props}
-      contentContainerStyle={styles.drawerContent}
-    >
+    <DrawerContentScrollView {...props} contentContainerStyle={styles.drawerContent}>
       <TouchableOpacity
         style={styles.closeBtn}
         onPress={() => props.navigation.closeDrawer()}
@@ -150,12 +95,10 @@ function CustomDrawerContent(props) {
       />
 
       <DrawerItem
-        label="Localização"
+        label="Localizacaos"
         labelStyle={styles.label}
-        icon={() => (
-          <FontAwesome5 name="map-marker-alt" size={20} color="#fff" />
-        )}
-        onPress={() => props.navigation.navigate("Localização")}
+        icon={() => <FontAwesome5 name="map-marker-alt" size={20} color="#fff" />}
+        onPress={() => props.navigation.navigate("listarCrianca")}
       />
 
       <DrawerItem
@@ -175,12 +118,7 @@ function CustomDrawerContent(props) {
             })
           }
         >
-          <FontAwesome5
-            name="door-open"
-            size={18}
-            color="#fff"
-            style={{ marginRight: 12 }}
-          />
+          <FontAwesome5 name="door-open" size={18} color="#fff" style={{ marginRight: 12 }} />
           <Text style={styles.logoutText}>SAIR</Text>
         </TouchableOpacity>
       </View>
@@ -188,7 +126,67 @@ function CustomDrawerContent(props) {
   );
 }
 
+// DRAWER PRINCIPAL
+function DrawerNavigator() {
+  return (
+    <Drawer.Navigator
+      screenOptions={({ navigation }) => ({
+        headerStyle: { backgroundColor: "#000" },
+        headerTintColor: "#fff",
+        headerTitle: "",
+        headerLeft: () => (
+          <TouchableOpacity onPress={() => navigation.openDrawer()}>
+            <FontAwesome5 name="bars" size={20} color="#fff" style={{ marginLeft: 15 }} />
+          </TouchableOpacity>
+        ),
+        headerRight: () => (
+          <Image
+            source={require("./src/assets/logo_geosync_fundotransparente.png")}
+            style={{ width: 200, height: 200, marginRight: -55, marginTop: 35 }}
+            resizeMode="contain"
+          />
+        ),
+        drawerStyle: { backgroundColor: "#000" },
+      })}
+      drawerContent={(props) => <CustomDrawerContent {...props} />}
+    >
+      <Drawer.Screen name="Home" component={Home} />
+      <Drawer.Screen name="Notificações" component={Notificacoes} />
+      <Drawer.Screen name="Perfil" component={PerfilStackNavigator} />
+      <Drawer.Screen name="listarCrianca" component={listarCrianca} />
+      <Drawer.Screen name="Manual" component={ManualMochila} />
+      <Drawer.Screen name="Localizacao"component={Localizacao}options={{gestureEnabled: true,swipeEdgeWidth: 300,}}/>
+    </Drawer.Navigator>
+  );
+}
+
+// 🚀 AQUI É O SEU APLICATIVO PRINCIPAL
 export default function App() {
+
+  // 🔔 CONFIGURA AS NOTIFICAÇÕES AQUI
+  useEffect(() => {
+    async function configurarNotificacoes() {
+      const { status } = await Notifications.requestPermissionsAsync();
+
+      if (status !== "granted") {
+        alert("As notificações estão desativadas!");
+        return;
+      }
+
+      const token = (await Notifications.getExpoPushTokenAsync()).data;
+      console.log("TOKEN DO DISPOSITIVO:", token);
+
+      if (Platform.OS === "android") {
+        await Notifications.setNotificationChannelAsync("default", {
+          name: "Padrão",
+          importance: Notifications.AndroidImportance.MAX,
+        });
+      }
+    }
+
+    configurarNotificacoes();
+  }, []);
+
   return (
     <ThemeProvider>
       <NavigationContainer>
@@ -199,11 +197,15 @@ export default function App() {
           <Stack.Screen name="RealizarCadastro" component={RealizarCadastro} />
           <Stack.Screen name="EsqueceuSenha" component={EsqueceuSenha} />
           <Stack.Screen name="Main" component={DrawerNavigator} />
+          <Stack.Screen name="MapScreen" component={MapScreen} />
+          <Stack.Screen name="ConfigAreas" component={ConfigAreas} />
+          <Stack.Screen name="Localizacao" component={Localizacao} />
         </Stack.Navigator>
       </NavigationContainer>
     </ThemeProvider>
   );
 }
+
 
 const styles = StyleSheet.create({
   drawerContent: {
