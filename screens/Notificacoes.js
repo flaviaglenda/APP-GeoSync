@@ -36,7 +36,7 @@ export default function Notificacoes() {
   return (
     <View   style={[styles.container, { backgroundColor: darkMode ? "#192230" : "#e9e9eb" }]}>
       <LinearGradient
-        colors={["#000000ff", "#780b47"]}
+        colors={["#5f0738", "#5f0738"]}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 0 }}
         style={styles.header}
@@ -91,14 +91,14 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  header: {
-    marginTop: -10,
-    height: 80,
+ header: {
+    marginTop: -30,
+    height: 95,
     flexDirection: "row",
     alignItems: "flex-end",
     justifyContent: "center",
     paddingBottom: 10,
-    paddingHorizontal: 10,
+    borderRadius: 33,
   },
   headerText: {
     marginBottom: 9,

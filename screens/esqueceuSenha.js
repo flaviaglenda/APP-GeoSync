@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   View,
   Text,
@@ -8,20 +8,72 @@ import {
   StyleSheet,
   KeyboardAvoidingView,
   Platform,
-    Dimensions
+  Dimensions,
+  Alert,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { FontAwesome } from "@expo/vector-icons";
+import { supabase } from "../supabaseConfig";
 
 export default function LoginScreen({ navigation }) {
-    const { height, width } = Dimensions.get("screen");
+  const { height, width } = Dimensions.get("screen");
 
-    const handleBack = () => {
+  const [email, setEmail] = useState("");
+  const [senha, setSenha] = useState("");
+  const [confirmarSenha, setConfirmarSenha] = useState("");
+
+  const handleBack = () => {
     if (navigation.canGoBack()) {
       navigation.goBack();
     } else {
       navigation.navigate("Login");
     }
+  };
+
+  const recuperarSenha = async () => {
+    if (!email.trim()) {
+      Alert.alert("Erro", "Digite um e-mail válido.");
+      return;
+    }
+
+    if (!senha.trim() || !confirmarSenha.trim()) {
+      Alert.alert("Erro", "Preencha todos os campos.");
+      return;
+    }
+
+    if (senha !== confirmarSenha) {
+      Alert.alert("Erro", "As senhas não coincidem.");
+      return;
+    }
+
+    // 1 - Verifica se existe usuário com esse email
+    const { data: userData, error: userError } = await supabase
+      .from("users")
+      .select("id")
+      .eq("email", email)
+      .maybeSingle();
+
+    if (userError || !userData) {
+      Alert.alert("Erro", "E-mail não encontrado.");
+      return;
+    }
+
+    const userId = userData.id;
+
+    // 2 - Atualiza a senha no Supabase Auth
+    const { error: updateError } = await supabase.auth.admin.updateUserById(
+      userId,
+      { password: senha }
+    );
+
+    if (updateError) {
+      Alert.alert("Erro", "Não foi possível alterar a senha.");
+      return;
+    }
+
+    Alert.alert("Sucesso", "Senha alterada com sucesso!", [
+      { text: "OK", onPress: () => navigation.replace("Login") },
+    ]);
   };
 
   return (
@@ -30,9 +82,9 @@ export default function LoginScreen({ navigation }) {
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         style={styles.innerContainer}
       >
-    <TouchableOpacity style={styles.backButton} onPress={handleBack}>
-              <FontAwesome name="arrow-left" size={28} color="#fff" />
-            </TouchableOpacity>
+        <TouchableOpacity style={styles.backButton} onPress={handleBack}>
+          <FontAwesome name="arrow-left" size={28} color="#fff" />
+        </TouchableOpacity>
 
         <Image
           source={require("../src/assets/logo_geosync_fundotransparente.png")}
@@ -45,35 +97,38 @@ export default function LoginScreen({ navigation }) {
         <View style={styles.inputContainer}>
           <Text style={styles.label}>EMAIL:</Text>
           <TextInput
-            style={[styles.input, { width: width * 0.8}]}
+            style={[styles.input, { width: width * 0.8 }]}
+            placeholder="Digite seu e-mail"
             placeholderTextColor="#ccc"
             keyboardType="email-address"
+            value={email}
+            onChangeText={setEmail}
           />
 
           <Text style={styles.label}>NOVA SENHA:</Text>
           <TextInput
             style={styles.input}
+            placeholder="Digite a nova senha"
             placeholderTextColor="#ccc"
             secureTextEntry={true}
+            value={senha}
+            onChangeText={setSenha}
           />
 
-           <Text style={styles.label}
-           >CONFIRMAR SENHA:</Text>
+          <Text style={styles.label}>CONFIRMAR SENHA:</Text>
           <TextInput
             style={styles.input}
+            placeholder="Confirme sua senha"
             placeholderTextColor="#ccc"
             secureTextEntry={true}
+            value={confirmarSenha}
+            onChangeText={setConfirmarSenha}
           />
         </View>
 
-        <TouchableOpacity
-          style={styles.loginButton}
-        onPress={() => navigation.replace("Login")}
-
-        >
+        <TouchableOpacity style={styles.loginButton} onPress={recuperarSenha}>
           <Text style={styles.loginText}>CONFIRMAR</Text>
         </TouchableOpacity>
-
       </KeyboardAvoidingView>
     </LinearGradient>
   );
@@ -128,15 +183,8 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     paddingVertical: 5,
   },
-  forgotButton: {
-    alignSelf: "flex-end",
-  },
-  forgotText: {
-    color: "#ccc",
-    fontSize: 17,
-  },
   loginButton: {
-    backgroundColor: "#ffffffff",
+    backgroundColor: "#fff",
     width: 180,
     paddingVertical: 15,
     borderRadius: 20,
@@ -146,13 +194,6 @@ const styles = StyleSheet.create({
   loginText: {
     color: "#50062F",
     fontSize: 18,
-  },
-  registerText: {
-    color: "#fff",
-    fontSize: 18,
-  },
-  registerLink: {
     fontWeight: "bold",
-    textDecorationLine: "underline",
   },
 });

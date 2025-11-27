@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -12,54 +12,147 @@ import {
   KeyboardAvoidingView,
   TouchableWithoutFeedback,
   Keyboard,
+  Alert,
+  Image,
 } from "react-native";
 import { FontAwesome, Ionicons } from "@expo/vector-icons";
+import * as ImagePicker from "expo-image-picker";
 import { LinearGradient } from "expo-linear-gradient";
 import { useTheme } from "../ThemeContext";
+import { supabase } from "../supabaseConfig";
 
-export default function PerfilCrianca({ navigation }) {
+export default function PerfilCrianca({ navigation, route }) {
   const { darkMode, theme } = useTheme();
+  const { id } = route.params;
 
-  const [escola, setEscola] = useState("SESI CAÇAPAVA");
-  const [turma, setTurma] = useState("3° Ano fundamental");
-  const [periodo, setPeriodo] = useState("07:00 - 15:30h");
+  const [crianca, setCrianca] = useState(null);
+  const [escola, setEscola] = useState("");
+  const [periodo, setPeriodo] = useState("");
+  const [nome, setNome] = useState("");
+  const [idade, setIdade] = useState("");
+  const [fotoUrl, setFotoUrl] = useState(null);
+
+  useEffect(() => {
+    buscarCrianca();
+  }, []);
+
+  const buscarCrianca = async () => {
+    const { data, error } = await supabase
+      .from("criancas")
+      .select("*")
+      .eq("id", id)
+      .single();
+
+    if (error) {
+      console.log(error);
+      Alert.alert("Erro", "Não foi possível carregar os dados.");
+      return;
+    }
+
+    setCrianca(data);
+    setNome(data.nome);
+    setIdade(data.idade?.toString());
+    setEscola(data.escola || "");
+    setPeriodo(data.periodo || "");
+    setFotoUrl(data.foto_url);
+  };
+
+  const escolherFoto = async () => {
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      quality: 1,
+    });
+
+    if (result.canceled) return;
+
+    const asset = result.assets[0];
+    setFotoUrl(asset.uri);
+
+    const response = await fetch(asset.uri);
+    const blob = await response.blob();
+
+    const fileName = `criancas/${id}_${Date.now()}.jpg`;
+
+    const { error: uploadError } = await supabase.storage
+      .from("fotos")
+      .upload(fileName, blob, {
+        upsert: true,
+        contentType: "image/jpeg",
+      });
+
+    if (uploadError) {
+      console.log(uploadError);
+      Alert.alert("Erro", "Não foi possível enviar a imagem.");
+      return;
+    }
+
+    const { data } = supabase.storage
+      .from("fotos")
+      .getPublicUrl(fileName);
+
+    setFotoUrl(data.publicUrl);
+  };
+
+  const salvarAlteracoes = async () => {
+    const { error } = await supabase
+      .from("criancas")
+      .update({
+        nome,
+        idade: parseInt(idade),
+        escola,
+        periodo,
+        foto_url: fotoUrl,
+      })
+      .eq("id", id);
+
+    if (error) {
+      console.log(error);
+      Alert.alert("Erro", "Não foi possível salvar.");
+      return;
+    }
+
+    Alert.alert("Sucesso", "Dados atualizados!");
+    navigation.goBack();
+  };
+
+  if (!crianca) return null;
 
   return (
     <SafeAreaView
-  style={[
-    styles.safeArea,
-    { backgroundColor: theme.colors.background },
-  ]}
->
+      style={[
+        styles.safeArea,
+        { backgroundColor: theme.colors.background },
+      ]}
+    >
       <KeyboardAvoidingView
         style={{ flex: 1 }}
         behavior={Platform.OS === "ios" ? "padding" : "height"}
-        keyboardVerticalOffset={Platform.OS === "ios" ? 80 : 20}
       >
         <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
           <View
-           style={[styles.container, { backgroundColor: darkMode ? "#192230" : "#e9e9eb" }]}
+            style={[
+              styles.container,
+              { backgroundColor: darkMode ? "#192230" : "#e9e9eb" },
+            ]}
           >
             <LinearGradient
-              colors={["#000000", "#780b47"]}
+              colors={["#5f0738", "#5f0738"]}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 0 }}
               style={styles.header}
             >
               <TouchableOpacity
                 style={styles.backButton}
-                onPress={() => navigation.navigate("GerenciarCrianca")}
+                onPress={() => navigation.goBack()}
               >
                 <FontAwesome name="arrow-left" size={24} color="#fff" />
               </TouchableOpacity>
+
               <Text style={styles.headerText}>PERFIL CRIANÇA</Text>
             </LinearGradient>
 
-            <ScrollView
-              showsVerticalScrollIndicator={false}
-              contentContainerStyle={styles.scrollContent}
-              keyboardShouldPersistTaps="handled"
-            >
+            <ScrollView showsVerticalScrollIndicator={false}>
               <View style={styles.avatarContainer}>
                 <View
                   style={[
@@ -67,33 +160,47 @@ export default function PerfilCrianca({ navigation }) {
                     { borderColor: darkMode ? "#881052ff" : "#780b47" },
                   ]}
                 >
-                  <Ionicons
-                    name="person"
-                    size={100}
-                    color={darkMode ? "#fff" : "#192230"}
-                  />
-                  <TouchableOpacity style={styles.editIcon}>
+                  {fotoUrl ? (
+                    <Image
+                      source={{ uri: fotoUrl }}
+                      style={{ width: 140, height: 140, borderRadius: 70 }}
+                    />
+                  ) : (
+                    <Ionicons
+                      name="person"
+                      size={100}
+                      color={darkMode ? "#fff" : "#192230"}
+                    />
+                  )}
+
+                  <TouchableOpacity
+                    style={styles.editIcon}
+                    onPress={escolherFoto}
+                  >
                     <FontAwesome name="pencil" size={18} color="#fff" />
                   </TouchableOpacity>
                 </View>
+
                 <Text
                   style={[
                     styles.nomeCrianca,
                     { color: darkMode ? "#fff" : "#333" },
                   ]}
                 >
-                  Lucas
+                  {nome}
                 </Text>
+
                 <Text
                   style={[
                     styles.idadeCrianca,
                     { color: darkMode ? "#ccc" : "#666" },
                   ]}
                 >
-                  7 anos
+                  {idade} anos
                 </Text>
               </View>
 
+              {/* ============================ INPUTS ============================ */}
               <View
                 style={[
                   styles.inputContainer,
@@ -103,7 +210,48 @@ export default function PerfilCrianca({ navigation }) {
                 <Text
                   style={[
                     styles.label,
-                    { color: darkMode ? "#fff" : "#555" },
+                    { color: darkMode ? "#fff" : "#333" },
+                  ]}
+                >
+                  NOME
+                </Text>
+                <TextInput
+                  style={[
+                    styles.input,
+                    {
+                      color: darkMode ? "#fff" : "#000",
+                      borderBottomColor: darkMode ? "#fff" : "#999",
+                    },
+                  ]}
+                  value={nome}
+                  onChangeText={setNome}
+                />
+
+                <Text
+                  style={[
+                    styles.label,
+                    { color: darkMode ? "#fff" : "#333" },
+                  ]}
+                >
+                  IDADE
+                </Text>
+                <TextInput
+                  keyboardType="numeric"
+                  style={[
+                    styles.input,
+                    {
+                      color: darkMode ? "#fff" : "#000",
+                      borderBottomColor: darkMode ? "#fff" : "#999",
+                    },
+                  ]}
+                  value={idade}
+                  onChangeText={setIdade}
+                />
+
+                <Text
+                  style={[
+                    styles.label,
+                    { color: darkMode ? "#fff" : "#333" },
                   ]}
                 >
                   ESCOLA
@@ -112,68 +260,36 @@ export default function PerfilCrianca({ navigation }) {
                   style={[
                     styles.input,
                     {
-                      color: darkMode ? "#fff" : "#333",
-                      borderBottomColor: darkMode ? "#555" : "#929292ff",
+                      color: darkMode ? "#fff" : "#000",
+                      borderBottomColor: darkMode ? "#fff" : "#999",
                     },
                   ]}
                   value={escola}
                   onChangeText={setEscola}
-                  placeholder="Nome da Escola"
-                  placeholderTextColor={darkMode ? "#888" : "#888"}
                 />
 
                 <Text
                   style={[
                     styles.label,
-                    { color: darkMode ? "#fff" : "#555" },
+                    { color: darkMode ? "#fff" : "#333" },
                   ]}
                 >
-                  TURMA
+                  PERÍODO
                 </Text>
                 <TextInput
                   style={[
                     styles.input,
                     {
-                      color: darkMode ? "#fff" : "#333",
-                      borderBottomColor: darkMode ? "#555" : "#929292ff",
-                    },
-                  ]}
-                  value={turma}
-                  onChangeText={setTurma}
-                  placeholder="Turma"
-                  placeholderTextColor={darkMode ? "#888" : "#888"}
-                />
-
-                <Text
-                  style={[
-                    styles.label,
-                    { color: darkMode ? "#fff" : "#555" },
-                  ]}
-                >
-                  PERÍODO ESCOLAR
-                </Text>
-                <TextInput
-                  style={[
-                    styles.input,
-                    {
-                      color: darkMode ? "#fff" : "#333",
-                      borderBottomColor: darkMode ? "#555" : "#929292ff",
+                      color: darkMode ? "#fff" : "#000",
+                      borderBottomColor: darkMode ? "#fff" : "#999",
                     },
                   ]}
                   value={periodo}
                   onChangeText={setPeriodo}
-                  placeholder="Período"
-                  placeholderTextColor={darkMode ? "#888" : "#888"}
                 />
               </View>
 
-              <TouchableOpacity
-                style={[
-                  styles.saveButton,
-                  { backgroundColor: "#780b47" },
-                ]}
-                onPress={() => navigation.goBack()}
-              >
+              <TouchableOpacity style={styles.saveButton} onPress={salvarAlteracoes}>
                 <Text style={styles.saveButtonText}>SALVAR</Text>
               </TouchableOpacity>
             </ScrollView>
@@ -189,17 +305,15 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingTop: Platform.OS === "android" ? StatusBar.currentHeight : 0,
   },
-  container: {
-    flex: 1,
-  },
+  container: { flex: 1 },
   header: {
-    marginTop: -10,
-    height: 80,
+    marginTop: -30,
+    height: 95,
     flexDirection: "row",
     alignItems: "flex-end",
     justifyContent: "center",
     paddingBottom: 10,
-    paddingHorizontal: 10,
+    borderRadius: 33,
   },
   headerText: {
     marginBottom: 9,
@@ -207,19 +321,8 @@ const styles = StyleSheet.create({
     fontWeight: "100",
     color: "#fff",
   },
-  backButton: {
-    position: "absolute",
-    left: 23,
-    bottom: 26,
-  },
-  scrollContent: {
-    paddingBottom: 50,
-  },
-  avatarContainer: {
-    alignItems: "center",
-    marginTop: 30,
-    marginBottom: 20,
-  },
+  backButton: { position: "absolute", left: 23, bottom: 26 },
+  avatarContainer: { alignItems: "center", marginTop: 30, marginBottom: 20 },
   avatarWrapper: {
     width: 150,
     height: 150,
@@ -228,11 +331,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     borderWidth: 3,
     marginBottom: 10,
-    elevation: 5,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
   },
   editIcon: {
     position: "absolute",
@@ -244,39 +342,22 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: "#fff",
   },
-  nomeCrianca: {
-    fontSize: 28,
-    fontWeight: "bold",
-    marginBottom: 5,
-  },
-  idadeCrianca: {
-    fontSize: 18,
-    fontWeight: "normal",
-  },
+  nomeCrianca: { fontSize: 28, fontWeight: "bold" },
+  idadeCrianca: { fontSize: 18 },
   inputContainer: {
     marginHorizontal: 25,
     marginTop: 20,
     borderRadius: 15,
     padding: 20,
-    elevation: 3,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.22,
-    shadowRadius: 2.22,
   },
   label: {
     marginTop: 15,
     fontSize: 13,
     fontWeight: "bold",
-    marginBottom: 8,
-    textTransform: "uppercase",
   },
   input: {
     height: 45,
     borderBottomWidth: 1,
-    borderRadius: 0,
-    paddingHorizontal: 0,
-    backgroundColor: "transparent",
     fontSize: 16,
   },
   saveButton: {
@@ -284,18 +365,9 @@ const styles = StyleSheet.create({
     marginHorizontal: 130,
     borderRadius: 28,
     alignItems: "center",
+    backgroundColor: "#780b47",
     marginTop: 30,
     marginBottom: 40,
-    elevation: 5,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
   },
-  saveButtonText: {
-    color: "#fff",
-    fontWeight: "bold",
-    fontSize: 18,
-    textTransform: "uppercase",
-  },
+  saveButtonText: { color: "#fff", fontWeight: "bold", fontSize: 18 },
 });

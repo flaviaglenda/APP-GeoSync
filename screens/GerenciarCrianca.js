@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -8,50 +8,116 @@ import {
   SafeAreaView,
   Platform,
   StatusBar,
+  Alert,
+  Image
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { FontAwesome, Ionicons } from "@expo/vector-icons";
 import { useTheme } from "../ThemeContext";
+import { supabase } from "../supabaseConfig";
 
 export default function GerenciarCriancas({ navigation }) {
   const { darkMode, theme } = useTheme();
 
-  // agora o array é um estado pra podermos remover sem banco
-  const [criancas, setCriancas] = useState([
-    { id: 1, nome: "Lucas", escola: "SESI-Caçapava", alerta: true },
-    { id: 2, nome: "Sabrina", escola: "Colégio Cecília", alerta: false },
-  ]);
+  const [criancas, setCriancas] = useState([]);
 
-  // função pra remover criança
-  const removerCrianca = (id) => {
-    setCriancas((prev) => prev.filter((item) => item.id !== id));
+  // 🔥 Atualiza na hora + realtime + ao focar na tela
+  useEffect(() => {
+    buscarCriancas();
+
+    const canal = supabase
+      .channel("realtime-criancas")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "criancas" },
+        () => buscarCriancas()
+      )
+      .subscribe();
+
+    const unsubscribe = navigation.addListener("focus", () => {
+      buscarCriancas();
+    });
+
+    return () => {
+      supabase.removeChannel(canal);
+      unsubscribe();
+    };
+  }, []);
+
+const buscarCriancas = async () => {
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+
+  const userId = session?.user?.id;
+
+  const { data, error } = await supabase
+    .from("criancas")
+    .select("*")
+    .eq("usuario_id", userId)
+    .order("id", { ascending: true });
+
+  if (!error) setCriancas(data);
+};
+
+  const removerCrianca = (id, nome) => {
+    Alert.alert(
+      "Excluir criança",
+      `Você deseja excluir ${nome}?`,
+      [
+        { text: "Cancelar", style: "cancel" },
+        {
+          text: "Excluir",
+          style: "destructive",
+          onPress: async () => {
+            const { error } = await supabase
+              .from("criancas")
+              .delete()
+              .eq("id", id);
+
+            if (error) {
+              Alert.alert("Erro", "Não foi possível excluir a criança.");
+            } else {
+              buscarCriancas();
+            }
+          },
+        },
+      ]
+    );
   };
 
   return (
- <SafeAreaView
-  style={[
-    styles.safeArea,
-    { backgroundColor: theme.colors.background },
-  ]}
->
+    <SafeAreaView
+      style={[
+        styles.safeArea,
+        { backgroundColor: theme.colors.background },
+      ]}
+    >
       <View
-        style={[styles.container, { backgroundColor: darkMode ? "#192230" : "#e9e9eb" }]}
+        style={[
+          styles.container,
+          { backgroundColor: darkMode ? "#192230" : "#e9e9eb" },
+        ]}
       >
+        {/* Header */}
         <LinearGradient
-          colors={["#000000ff", "#780b47"]}
+          colors={["#5f0738", "#5f0738"]}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 0 }}
           style={styles.header}
         >
           <TouchableOpacity
             style={styles.backButton}
-            onPress={() => navigation.navigate("PerfilResponsavel")}
+            onPress={() =>
+              navigation.navigate("PerfilResponsavel")
+            }
           >
             <FontAwesome name="arrow-left" size={24} color="#fff" />
           </TouchableOpacity>
           <Text style={styles.headerText}>GERENCIAR CRIANÇA</Text>
         </LinearGradient>
 
+        {/* Conteúdo */}
         <ScrollView contentContainerStyle={styles.scrollContainer}>
           {criancas.map((item) => (
             <View
@@ -62,11 +128,28 @@ export default function GerenciarCriancas({ navigation }) {
               ]}
             >
               <View style={styles.childInfo}>
-                <Ionicons
-                  name="person-circle-outline"
-                  size={60}
-                  color={darkMode ? "#fff" : "#182437ff"}
-                />
+
+                {/* FOTO */}
+                {item.foto_url ? (
+                  <Image
+                    source={{ uri: item.foto_url }}
+                    style={{
+                      width: 60,
+                      height: 60,
+                      borderRadius: 30,
+                      borderWidth: 2,
+                      borderColor: darkMode ? "#881052ff" : "#780b47",
+                    }}
+                  />
+                ) : (
+                  <Ionicons
+                    name="person-circle-outline"
+                    size={60}
+                    color={darkMode ? "#fff" : "#182437ff"}
+                  />
+                )}
+
+                {/* NOME + ESCOLA */}
                 <View style={styles.childTextContainer}>
                   <Text
                     style={[
@@ -76,18 +159,20 @@ export default function GerenciarCriancas({ navigation }) {
                   >
                     {item.nome}
                   </Text>
+
                   <Text
                     style={[
                       styles.childSchool,
-                      { color: darkMode ? "#aaa" : "#182437ff" },
+                      { color: darkMode ? "#bbb" : "#444" },
                     ]}
                   >
-                    {item.escola}
+                    {item.escola ? item.escola : "Escola não informada"}
                   </Text>
                 </View>
               </View>
 
               <View style={styles.iconContainer}>
+                {/* ALERTA */}
                 {item.alerta && (
                   <FontAwesome
                     name="exclamation-triangle"
@@ -97,9 +182,11 @@ export default function GerenciarCriancas({ navigation }) {
                   />
                 )}
 
-                {/* Ícone de informação */}
+                {/* INFO */}
                 <TouchableOpacity
-                  onPress={() => navigation.navigate("PerfilCrianca")}
+                  onPress={() =>
+                    navigation.navigate("PerfilCrianca", { id: item.id })
+                  }
                 >
                   <FontAwesome
                     name="info-circle"
@@ -109,8 +196,10 @@ export default function GerenciarCriancas({ navigation }) {
                   />
                 </TouchableOpacity>
 
-                {/* Ícone de lixeira (remover) */}
-                <TouchableOpacity onPress={() => removerCrianca(item.id)}>
+                {/* DELETAR */}
+                <TouchableOpacity
+                  onPress={() => removerCrianca(item.id, item.nome)}
+                >
                   <FontAwesome
                     name="trash"
                     size={24}
@@ -121,6 +210,7 @@ export default function GerenciarCriancas({ navigation }) {
             </View>
           ))}
 
+          {/* Botão adicionar */}
           <TouchableOpacity
             style={styles.addButton}
             onPress={() => navigation.navigate("AdicionarCrianca")}
@@ -144,14 +234,14 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  header: {
-    marginTop: -10,
-    height: 80,
+ header: {
+    marginTop: -30,
+    height: 95,
     flexDirection: "row",
     alignItems: "flex-end",
     justifyContent: "center",
     paddingBottom: 10,
-    paddingHorizontal: 10,
+    borderRadius: 33,
   },
   headerText: {
     marginBottom: 9,
@@ -176,10 +266,6 @@ const styles = StyleSheet.create({
     borderRadius: 15,
     marginBottom: 15,
     elevation: 3,
-    shadowColor: "#ffffffff",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.15,
-    shadowRadius: 1.25,
   },
   childInfo: {
     flexDirection: "row",
@@ -194,7 +280,7 @@ const styles = StyleSheet.create({
   },
   childSchool: {
     fontSize: 15,
-    marginTop: 2,
+    marginTop: 3,
   },
   iconContainer: {
     flexDirection: "row",
@@ -207,11 +293,6 @@ const styles = StyleSheet.create({
     borderRadius: 28,
     alignItems: "center",
     marginTop: 30,
-    elevation: 5,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
   },
   addButtonContent: {
     flexDirection: "row",

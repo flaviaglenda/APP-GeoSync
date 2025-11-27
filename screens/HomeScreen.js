@@ -1,33 +1,98 @@
-import React from "react";
-import { View, Text, TouchableOpacity, Image, StyleSheet, ScrollView } from "react-native";
+import React, { useEffect, useState } from "react";
+import { 
+  View, 
+  Text, 
+  TouchableOpacity, 
+  Image, 
+  StyleSheet, 
+  ScrollView 
+} from "react-native";
 import { Ionicons, FontAwesome5, MaterialIcons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useTheme } from "../ThemeContext";
+import { supabase } from "../supabaseConfig";
+import { useIsFocused } from "@react-navigation/native";
 
 export default function HomeScreen({ navigation }) {
   const { darkMode, theme } = useTheme();
+  const isFocused = useIsFocused();
+
+  const [criancas, setCriancas] = useState([]);
+
+  useEffect(() => {
+    if (isFocused) {
+      carregarCriancas();
+    }
+  }, [isFocused]);
+
+  const carregarCriancas = async () => {
+    // pega a sessão atual
+    const { data: { session } } = await supabase.auth.getSession();
+
+    if (!session) {
+      setCriancas([]); // nenhum usuário logado
+      return;
+    }
+
+    const userId = session.user.id;
+
+    // pega só as crianças desse usuário
+    const { data, error } = await supabase
+      .from("criancas")
+      .select("*")
+      .eq("usuario_id", userId);
+
+    if (error) {
+      console.log("Erro ao carregar crianças:", error.message);
+      setCriancas([]);
+    } else {
+      setCriancas(data || []);
+    }
+  };
 
   return (
-    <ScrollView style={[styles.container, { backgroundColor: theme.colors.background }]}>
+    <ScrollView 
+      style={[
+        styles.container, 
+        { backgroundColor: theme.colors.background }
+      ]}
+    >
+
+      {/* BOTÃO LOCALIZAÇÃO */}
       <TouchableOpacity
-        style={[styles.btnDetalhes, { backgroundColor: darkMode ? "#fff" : "#192230" }]}
+        style={[
+          styles.btnDetalhes, 
+          { backgroundColor: darkMode ? "#fff" : "#192230" }
+        ]}
         onPress={() => navigation.navigate("Localização")}
       >
         <Ionicons
           name="location-outline"
           size={22}
-          color={darkMode ? "#000" : "#f2efefff"}
+          color={darkMode ? "#000" : "#fff"}
           style={{ marginRight: 5 }}
         />
-        <Text style={[styles.btnDetalhesText, { color: darkMode ? "#000" : "#fff" }]}>
+        <Text 
+          style={[
+            styles.btnDetalhesText, 
+            { color: darkMode ? "#000" : "#fff" }
+          ]}
+        >
           Ver localização detalhada
         </Text>
       </TouchableOpacity>
 
-      <Text style={[styles.title, { color: darkMode ? "#fff" : "#000" }]}>
+      {/* TÍTULO */}
+      <Text 
+        style={[
+          styles.title, 
+          { color: darkMode ? "#fff" : "#000" }
+        ]}
+      >
         Supervisão de atividades
       </Text>
 
+      {/* MAPA */}
       <View style={styles.mapContainer}>
         <Image
           source={require("../src/assets/mapa_visual.png")}
@@ -35,7 +100,9 @@ export default function HomeScreen({ navigation }) {
         />
       </View>
 
+      {/* DOIS BOTÕES GRANDES */}
       <View style={styles.buttonsRow}>
+        {/* LOCALIZAÇÃO */}
         {darkMode ? (
           <TouchableOpacity
             style={[styles.btnRoxo, { backgroundColor: "#961f53ff" }]}
@@ -54,8 +121,8 @@ export default function HomeScreen({ navigation }) {
             end={{ x: 1, y: 1 }}
             style={styles.btnRoxo}
           >
-            <TouchableOpacity
-              style={styles.btnContent}
+            <TouchableOpacity 
+              style={styles.btnContent} 
               onPress={() => navigation.navigate("Localização")}
             >
               <Text style={styles.btnTitle}>Clique para ver</Text>
@@ -65,6 +132,7 @@ export default function HomeScreen({ navigation }) {
           </LinearGradient>
         )}
 
+        {/* ALARME */}
         {darkMode ? (
           <TouchableOpacity
             style={[styles.btnRoxo, { backgroundColor: "#961f53ff" }]}
@@ -83,8 +151,8 @@ export default function HomeScreen({ navigation }) {
             end={{ x: 1, y: 1 }}
             style={styles.btnRoxo}
           >
-            <TouchableOpacity
-              style={styles.btnContent}
+            <TouchableOpacity 
+              style={styles.btnContent} 
               onPress={() => navigation.navigate("Notificações")}
             >
               <Text style={styles.btnTitle}>Clique para ver</Text>
@@ -95,149 +163,95 @@ export default function HomeScreen({ navigation }) {
         )}
       </View>
 
-      <Text style={[styles.statusTitle, { color: darkMode ? "#ffffffff" : "#000" }]}>Status</Text>
+      {/* STATUS */}
+      <Text 
+        style={[
+          styles.statusTitle, 
+          { color: darkMode ? "#fff" : "#000" }
+        ]}
+      >
+        Status
+      </Text>
 
-      <View style={[styles.card, { backgroundColor: darkMode ? "#f2efefff" : "#192230" }]}>
-        <Text style={[styles.cardTitle, { color: darkMode ? "#000" : "#fff" }]}>
-          Mochila GeoKid Pro - Lucas
-        </Text>
-        <View style={styles.row}>
-          <FontAwesome5 name="wifi" size={28} color={darkMode ? "#000" : "#fff"} />
-          <Text style={[styles.cardStatus, { color: darkMode ? "#000" : "#fff" }]}>Sem conexão.</Text>
-          <Text style={[styles.percent, { color: darkMode ? "#000" : "#fff" }]}>100%</Text>
-          <Ionicons name="battery-full" size={28} color={darkMode ? "#000" : "#fff"} />
-        </View>
-        <Text style={[styles.updateText, { color: darkMode ? "#333" : "#aaa" }]}>
-          Última atualização há 1 hora.
-        </Text>
-        <MaterialIcons name="warning" size={30} color="#a90b50ff" style={styles.warningIcon} />
+      <View
+        style={[
+          styles.card,
+          { backgroundColor: darkMode ? "#f2efef" : "#192230" }
+        ]}
+      >
+        {/* SE NÃO TIVER NENHUMA CRIANÇA */}
+        {criancas.length === 0 ? (
+          <View style={{ alignItems: "center", paddingVertical: 30 }}>
+            <Ionicons 
+              name="sad-outline" 
+              size={60} 
+              color={darkMode ? "#000" : "#fff"} 
+            />
+            <Text 
+              style={{ 
+                marginTop: 15, 
+                fontSize: 20, 
+                color: darkMode ? "#000" : "#fff" 
+              }}
+            >
+              Nenhuma mochila adicionada
+            </Text>
+          </View>
+        ) : (
+          // SE TIVER CRIANÇAS, LISTA NORMAL
+          criancas.map((c, index) => (
+            <View key={c.id}>
+              <Text style={[styles.cardTitle, { color: darkMode ? "#000" : "#fff" }]}>
+                {c.nome}
+              </Text>
 
-        <View style={styles.separator} />
+              <View style={styles.row}>
+                <FontAwesome5 name="wifi" size={28} color={darkMode ? "#000" : "#fff"} />
+                <Text style={[styles.cardStatus, { color: darkMode ? "#000" : "#fff" }]}>
+                  {c.conectado ? "Conectado" : "Sem conexão."}
+                </Text>
+                <Text style={[styles.percent, { color: darkMode ? "#000" : "#fff" }]}>
+                  {c.bateria || 100}%
+                </Text>
+                <Ionicons name="battery-full" size={28} color={darkMode ? "#000" : "#fff"} />
+              </View>
 
-        <Text style={[styles.cardTitle, { color: darkMode ? "#000" : "#fff" }]}>
-          Mochila GeoGuard - Sabrina
-        </Text>
-        <View style={styles.row}>
-          <FontAwesome5 name="wifi" size={28} color={darkMode ? "#000" : "#fff"} />
-          <Text style={[styles.cardStatus, { color: darkMode ? "#000" : "#fff" }]}>Conectado</Text>
-          <Text style={[styles.percent, { color: darkMode ? "#000" : "#fff" }]}>100%</Text>
-          <Ionicons name="battery-full" size={28} color={darkMode ? "#000" : "#fff"} />
-        </View>
+              <Text style={[styles.updateText, { color: darkMode ? "#333" : "#aaa" }]}>
+                Última atualização há 1 hora.
+              </Text>
+
+              <MaterialIcons name="warning" size={30} color="#a90b50ff" style={styles.warningIcon} />
+
+              {index !== criancas.length - 1 && <View style={styles.separator} />}
+            </View>
+          ))
+        )}
       </View>
+
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    paddingHorizontal: 20,
-    paddingTop: 40
-  },
-  btnDetalhes: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    borderRadius: 28,
-    paddingVertical: 10,
-    marginBottom: 30
-  },
-  btnDetalhesText: {
-    fontSize: 20,
-    marginLeft: 5,
-    fontWeight: "600"
-  },
-  title: {
-    fontWeight: "700",
-    fontSize: 23,
-    marginBottom: 10
-  },
-  mapContainer: {
-    borderRadius: 15,
-    overflow: "hidden",
-    marginBottom: 15
-  },
-  mapImage: {
-    width: "100%",
-    height: 230,
-    resizeMode: "cover"
-  },
-  buttonsRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginBottom: 30
-  },
-  btnRoxo: {
-    borderRadius: 20,
-    width: "48%",
-    height: 150,
-    marginTop: 15,
-    overflow: "hidden",
-    justifyContent: "center"
-  },
-  btnContent: {
-    flex: 1,
-    padding: 10,
-    justifyContent: "space-between"
-  },
-  btnTitle: {
-    color: "#fff",
-    fontSize: 15,
-    marginBottom: 10
-  },
-  btnMain: {
-    color: "#fff",
-    fontSize: 22,
-    fontWeight: "600"
-  },
-  arrow: {
-    alignSelf: "flex-end",
-    marginTop: 10
-  },
-  statusTitle: {
-    fontSize: 23,
-    fontWeight: "700",
-    marginBottom: 10
-  },
-  card: {
-    borderRadius: 29,
-    padding: 15,
-    marginBottom: 20,
-    height: 260
-  },
-  cardTitle: {
-    fontWeight: "700",
-    marginBottom: 15,
-    fontSize: 20
-  },
-  row: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    marginBottom: 10
-  },
-  cardStatus: {
-    fontSize: 18,
-    flex: 1,
-    marginLeft: 5
-  },
-  percent: {
-    fontSize: 18,
-    marginRight: 5
-  },
-  updateText: {
-    fontSize: 15,
-    marginTop: 5
-  },
-  separator: {
-    borderBottomColor: "#fff",
-    borderBottomWidth: 1,
-    opacity: 0.4,
-    marginVertical: 10
-  },
-  warningIcon: {
-    position: "absolute",
-    bottom: 210,
-    right: 10
-  }
+  container: { flex: 1, paddingHorizontal: 20, paddingTop: 40 },
+  btnDetalhes: { flexDirection: "row", alignItems: "center", justifyContent: "center", borderRadius: 28, paddingVertical: 10, marginBottom: 30 },
+  btnDetalhesText: { fontSize: 20, marginLeft: 5, fontWeight: "600" },
+  title: { fontWeight: "700", fontSize: 23, marginBottom: 10 },
+  mapContainer: { borderRadius: 15, overflow: "hidden", marginBottom: 15 },
+  mapImage: { width: "100%", height: 230, resizeMode: "cover" },
+  buttonsRow: { flexDirection: "row", justifyContent: "space-between", marginBottom: 30 },
+  btnRoxo: { borderRadius: 20, width: "48%", height: 150, marginTop: 15, overflow: "hidden", justifyContent: "center" },
+  btnContent: { flex: 1, padding: 10, justifyContent: "space-between" },
+  btnTitle: { color: "#fff", fontSize: 15, marginBottom: 10 },
+  btnMain: { color: "#fff", fontSize: 22, fontWeight: "600" },
+  arrow: { alignSelf: "flex-end", marginTop: 10 },
+  statusTitle: { fontSize: 23, fontWeight: "700", marginBottom: 10 },
+  card: { borderRadius: 29, padding: 15 },
+  cardTitle: { fontWeight: "700", marginBottom: 15, fontSize: 20 },
+  row: { flexDirection: "row", alignItems: "center", justifyContent: "space-between"},
+  cardStatus: { fontSize: 18, flex: 1, marginLeft: 5 },
+  percent: { fontSize: 18, marginRight: 5 },
+  updateText: { fontSize: 15, marginTop: 5 },
+  separator: { borderBottomColor: "#fff", borderBottomWidth: 1, opacity: 0.4, marginVertical: 10 },
+  warningIcon: { position: "absolute", top: 10, right: 10 }
 });

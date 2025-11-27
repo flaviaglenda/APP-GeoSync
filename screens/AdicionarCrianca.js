@@ -10,385 +10,434 @@ import {
   TextInput,
   StatusBar,
   KeyboardAvoidingView,
-  Alert, // Importar Alert para feedback ao usuário
+  Alert,
+  Image,
 } from "react-native";
 import { FontAwesome, Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useTheme } from "../ThemeContext";
-import { supabase } from "../supabaseConfig"; // Importar o cliente Supabase
+import { supabase } from "../supabaseConfig";
+import * as ImagePicker from "expo-image-picker";
 
-// Função auxiliar para calcular a idade a partir da data de nascimento (DD/MM/AAAA)
+/* ---------------------- FUNÇÃO CALCULAR IDADE ------------------------- */
 const calcularIdade = (dataNascimento) => {
   if (!dataNascimento || dataNascimento.length !== 10) return null;
-  
-  const [dia, mes, ano] = dataNascimento.split('/').map(Number);
+
+  const [dia, mes, ano] = dataNascimento.split("/").map(Number);
   if (!dia || !mes || !ano) return null;
 
   const dataNasc = new Date(ano, mes - 1, dia);
   const hoje = new Date();
-  
+
   let idade = hoje.getFullYear() - dataNasc.getFullYear();
   const mesAtual = hoje.getMonth();
   const mesNasc = dataNasc.getMonth();
-  
-  if (mesAtual < mesNasc || (mesAtual === mesNasc && hoje.getDate() < dataNasc.getDate())) {
+
+  if (
+    mesAtual < mesNasc ||
+    (mesAtual === mesNasc && hoje.getDate() < dataNasc.getDate())
+  ) {
     idade--;
   }
-  
+
   return idade;
 };
 
-// Função auxiliar para simular a obtenção do ID do usuário logado
-// Em um aplicativo real, você obterá isso do estado de autenticação do Supabase (supabase.auth.user().id)
+/* ---------------- SIMULAÇÃO DE USUÁRIO LOGADO ----------------- */
 const getUserId = async () => {
-    // **IMPORTANTE:** Em um app real, você usaria:
-    // const { data: { user } } = await supabase.auth.getUser();
-    // return user?.id;
-    
-    // Para fins de demonstração, vamos simular um ID de usuário UUID
-    // Você DEVE substituir isso pela lógica real de autenticação do Supabase.
-    return "00000000-0000-0000-0000-000000000001"; 
+  try {
+    const { data: { session } } = await supabase.auth.getSession();
+    return session?.user?.id || null;
+  } catch (error) {
+    console.error("Erro ao buscar sessão:", error);
+    return null;
+  }
 };
 
-// Função auxiliar para buscar o mochila_id a partir do sensorId (que assumimos ser o nome da mochila)
+/* ---------------- GET MOCHILA ID ----------------- */
 const getMochilaId = async (sensorId) => {
-    if (!sensorId) return null;
+  if (!sensorId) return null;
 
-    const { data, error } = await supabase
-        .from('mochilas')
-        .select('id')
-        .eq('nome', sensorId) // Assumindo que sensorId é o nome da mochila
-        .single();
+  const { data, error } = await supabase
+    .from("mochilas")
+    .select("id")
+    .eq("nome", sensorId)
+    .single();
 
-    if (error && error.code !== 'PGRST116') { // PGRST116 é "No rows found"
-        console.error("Erro ao buscar mochila:", error);
-        Alert.alert("Erro", "Não foi possível verificar o ID da mochila. Tente novamente.");
-        return null;
-    }
-    
-    return data ? data.id : null;
+  if (error && error.code !== "PGRST116") {
+    console.error("Erro ao buscar mochila:", error);
+    return null;
+  }
+
+  return data ? data.id : null;
 };
 
-
+/* ----------------------- COMPONENTE PRINCIPAL ------------------------ */
 export default function AdicionarCrianca({ navigation }) {
   const { darkMode, theme } = useTheme();
+
   const [nome, setNome] = useState("");
   const [dataNascimento, setDataNascimento] = useState("");
   const [escola, setEscola] = useState("");
   const [periodo, setPeriodo] = useState("");
   const [sensorId, setSensorId] = useState("");
-  const [criada, setCriada] = useState(false);
-  const [loading, setLoading] = useState(false); // Estado de carregamento
+  const [fotoUrl, setFotoUrl] = useState(null); // preview e URL
+  const [loading, setLoading] = useState(false);
 
-  const handleAdicionar = async () => {
-    if (nome.trim() === "") {
-        Alert.alert("Erro", "O nome da criança é obrigatório.");
-        return;
+  /* ---------------- MÁSCARA DATA ---------------- */
+  const handleMascaraData = (text) => {
+    let clean = text.replace(/\D/g, "");
+    if (clean.length > 8) clean = clean.slice(0, 8);
+
+    let masked = clean;
+    if (clean.length > 2) masked = clean.slice(0, 2) + "/" + clean.slice(2);
+    if (clean.length > 4) masked = masked.slice(0, 5) + "/" + clean.slice(4);
+
+    setDataNascimento(masked);
+  };
+
+  /* ---------------- MÁSCARA HORÁRIO ---------------- */
+  const handleMascaraHorario = (text) => {
+    let clean = text.replace(/[^\d-]/g, "");
+    if (clean.length > 13) clean = clean.slice(0, 13);
+
+    if (clean.length >= 3 && clean[2] !== ":")
+      clean = clean.slice(0, 2) + ":" + clean.slice(2);
+
+    if (clean.length >= 8 && clean[7] !== "-")
+      clean = clean.slice(0, 5) + " - " + clean.slice(5);
+
+    if (clean.length >= 11 && clean[10] !== ":")
+      clean = clean.slice(0, 10) + ":" + clean.slice(10);
+
+    setPeriodo(clean);
+  };
+
+  /* ---------------- ESCOLHER FOTO — MESMA DO PerfilCrianca ---------------- */
+  const escolherFoto = async () => {
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      quality: 1,
+    });
+
+    if (result.canceled) return;
+
+    const asset = result.assets[0];
+
+    // preview instantâneo igual PerfilCrianca
+    setFotoUrl(asset.uri);
+  };
+
+  /* ---------------- UPLOAD (igual PerfilCrianca) ---------------- */
+ const uploadFoto = async (localUri, criancaId) => {
+  try {
+    // Corrige caminho do Android que dá erro
+    const uri = localUri.startsWith("file://")
+      ? localUri
+      : "file://" + localUri;
+
+    const response = await fetch(uri);
+    const blob = await response.blob();
+
+    const fileName = `criancas/${criancaId}_${Date.now()}.jpg`;
+
+    const { error: uploadError } = await supabase.storage
+      .from("fotos")
+      .upload(fileName, blob, {
+        upsert: true,
+        contentType: "image/jpeg",
+      });
+
+    if (uploadError) {
+      console.log("Erro upload:", uploadError);
+      return null;
     }
-    
+
+    const { data } = supabase.storage.from("fotos").getPublicUrl(fileName);
+    return data.publicUrl;
+
+  } catch (e) {
+    console.log("Erro upload:", e);
+    return null;
+  }
+};
+
+  /* ---------------- ADICIONAR CRIANÇA ---------------- */
+  const handleAdicionar = async () => {
+    if (!nome.trim()) {
+      Alert.alert("Erro", "O nome da criança é obrigatório.");
+      return;
+    }
+
     setLoading(true);
 
     try {
-        // 1. Obter o ID do usuário logado
-        const usuario_id = await getUserId();
-        if (!usuario_id) {
-            Alert.alert("Erro de Autenticação", "Usuário não logado. Por favor, faça login.");
-            setLoading(false);
-            return;
-        }
-
-        // 2. Calcular a idade
-        const idade = calcularIdade(dataNascimento);
-        if (dataNascimento && idade === null) {
-            Alert.alert("Erro", "Formato de Data de Nascimento inválido. Use DD/MM/AAAA.");
-            setLoading(false);
-            return;
-        }
-        
-        // 3. Buscar o ID da mochila (se sensorId foi fornecido)
-        let mochila_id = null;
-        if (sensorId) {
-            mochila_id = await getMochilaId(sensorId);
-            if (!mochila_id) {
-                Alert.alert("Erro", `Mochila com ID/Nome "${sensorId}" não encontrada. Verifique o ID.`);
-                setLoading(false);
-                return;
-            }
-        }
-
-        // 4. Preparar os dados para inserção
-        const criancaData = {
-            nome: nome.trim(),
-            idade: idade, // Pode ser null se a data não for fornecida/válida
-            usuario_id: usuario_id,
-            mochila_id: mochila_id, // Pode ser null se não houver mochila
-            // foto_url: A lógica de upload de foto é mais complexa e será tratada separadamente, 
-            // por enquanto, vamos deixar como null ou um valor padrão.
-            // data_criacao: O Supabase deve preencher automaticamente com o valor padrão.
-        };
-
-        // 5. Inserir no Supabase
-        const { data, error } = await supabase
-            .from('criancas')
-            .insert([criancaData])
-            .select(); // Retorna o registro inserido
-
-        if (error) {
-            console.error("Erro ao adicionar criança:", error);
-            Alert.alert("Erro de Banco de Dados", `Não foi possível adicionar a criança: ${error.message}`);
-            return;
-        }
-
-        // Sucesso
-        Alert.alert("Sucesso", `${nome} foi adicionado(a) com sucesso!`);
-        setCriada(true); // Exibe o card de sucesso
-        
-    } catch (e) {
-        console.error("Erro inesperado:", e);
-        Alert.alert("Erro", "Ocorreu um erro inesperado ao adicionar a criança.");
-    } finally {
+      const usuario_id = await getUserId();
+      if (!usuario_id) {
+        Alert.alert("Erro", "Você precisa estar logado.");
         setLoading(false);
+        return;
+      }
+
+      const idade = calcularIdade(dataNascimento);
+      if (dataNascimento && idade === null) {
+        Alert.alert("Erro", "Data inválida. Use DD/MM/AAAA.");
+        setLoading(false);
+        return;
+      }
+
+      let mochila_id = null;
+      if (sensorId) mochila_id = await getMochilaId(sensorId);
+
+      // Primeiro cria a criança
+      const { data: criada, error: createError } = await supabase
+        .from("criancas")
+        .insert([
+          {
+            nome,
+            idade,
+            usuario_id,
+            escola,
+            periodo,
+            mochila_id,
+          },
+        ])
+        .select()
+        .single();
+
+      if (createError) {
+        Alert.alert("Erro ao salvar", createError.message);
+        setLoading(false);
+        return;
+      }
+
+      let foto_url_final = null;
+
+      // se escolheu foto → faz upload IGUAL PerfilCrianca
+      if (fotoUrl) {
+        foto_url_final = await uploadFoto(fotoUrl, criada.id);
+
+        if (foto_url_final) {
+          await supabase
+            .from("criancas")
+            .update({ foto_url: foto_url_final })
+            .eq("id", criada.id);
+        }
+      }
+
+      Alert.alert("Sucesso", `${nome} foi adicionada!`);
+      navigation.navigate("GerenciarCrianca");
+
+    } catch (e) {
+      Alert.alert("Erro", "Erro inesperado.");
+      console.error(e);
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handleRemover = () => {
-    setNome("");
-    setDataNascimento("");
-    setEscola("");
-    setPeriodo("");
-    setSensorId("");
-    setCriada(false);
-  };
-
   return (
-   <SafeAreaView
-  style={[
-    styles.safeArea,
-    { backgroundColor: theme.colors.background },
-  ]}
->
+    <SafeAreaView style={[styles.safeArea, { backgroundColor: theme.colors.background }]}>
       <LinearGradient
-        colors={["#000000", "#780b47"]}
+        colors={["#5f0738", "#5f0738"]}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 0 }}
         style={styles.header}
       >
-        <TouchableOpacity
-          style={styles.backButton}
-          onPress={() => navigation.goBack()}
-        >
+        <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
           <FontAwesome name="arrow-left" size={24} color="#fff" />
         </TouchableOpacity>
         <Text style={styles.headerText}>ADICIONAR CRIANÇA</Text>
       </LinearGradient>
 
-      {/* KeyboardAvoidingView pra levantar a tela quando o teclado abrir */}
       <KeyboardAvoidingView
         style={styles.flex}
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         keyboardVerticalOffset={Platform.OS === "ios" ? 100 : 80}
       >
-        <ScrollView
-          contentContainerStyle={styles.formContainer}
-          showsVerticalScrollIndicator={false}
-          keyboardShouldPersistTaps="handled"
-        >
-          {!criada ? (
-            <>
-              <TouchableOpacity style={styles.fotoContainer}>
-                <View
-                  style={[
-                    styles.avatarWrapper,
-                    {
-                      borderColor: "#780b47",
-                      backgroundColor: darkMode ? "#192230" : "#fff",
-                    },
-                  ]}
-                >
-                  <Ionicons
-                    name="person"
-                    size={115}
-                    color={darkMode ? "#fff" : "#192230"}
-                  />
-                </View>
-                <Text
-                  style={[
-                    styles.fotoText,
-                    { color: darkMode ? "#ffffffff" : "#780b47" },
-                  ]}
-                >
-                  Alterar foto
-                </Text>
-              </TouchableOpacity>
-
-              <Text style={[styles.label, { color: darkMode ? "#fff" : "#555" }]}>
-                NOME
-              </Text>
-              <TextInput
-                style={[
-                  styles.input,
-                  {
-                    backgroundColor: darkMode ? "#192230" : "#fff",
-                    color: darkMode ? "#fff" : "#333",
-                    borderColor: darkMode ? "#555" : "#ccc",
-                  },
-                ]}
-                placeholder="Digite o nome"
-                placeholderTextColor={darkMode ? "#888" : "#888"}
-                value={nome}
-                onChangeText={setNome}
-                returnKeyType="next"
-              />
-
-              <Text style={[styles.label, { color: darkMode ? "#fff" : "#555" }]}>
-                DATA DE NASCIMENTO
-              </Text>
-              <View
-                style={[
-                  styles.inputIcon,
-                  {
-                    backgroundColor: darkMode ? "#192230" : "#fff",
-                    borderColor: darkMode ? "#555" : "#ccc",
-                  },
-                ]}
-              >
+        <ScrollView contentContainerStyle={styles.formContainer}>
+          <TouchableOpacity style={styles.fotoContainer} onPress={escolherFoto}>
+            <View
+              style={[
+                styles.avatarWrapper,
+                {
+                  borderColor: "#780b47",
+                  backgroundColor: darkMode ? "#192230" : "#fff",
+                },
+              ]}
+            >
+              {fotoUrl ? (
+                <Image
+                  source={{ uri: fotoUrl }}
+                  style={{
+                    width: 150,
+                    height: 150,
+                    borderRadius: 75,
+                  }}
+                />
+              ) : (
                 <Ionicons
-                  name="calendar-outline"
-                  size={22}
-                  color={darkMode ? "#fff" : "#000000ff"}
+                  name="person"
+                  size={115}
+                  color={darkMode ? "#fff" : "#192230"}
                 />
-                <TextInput
-                  style={[styles.inputWithIcon, { color: darkMode ? "#fff" : "#333" }]}
-                  placeholder="DD/MM/AAAA"
-                  placeholderTextColor={darkMode ? "#888" : "#888"}
-                  value={dataNascimento}
-                  onChangeText={setDataNascimento}
-                  keyboardType="numeric"
-                  returnKeyType="next"
-                />
-              </View>
-
-              <Text style={[styles.label, { color: darkMode ? "#fff" : "#555" }]}>
-                ESCOLA
-              </Text>
-              <TextInput
-                style={[
-                  styles.input,
-                  {
-                    backgroundColor: darkMode ? "#192230" : "#fff",
-                    color: darkMode ? "#fff" : "#333",
-                    borderColor: darkMode ? "#555" : "#ccc",
-                  },
-                ]}
-                placeholder="Digite a escola"
-                placeholderTextColor={darkMode ? "#888" : "#888"}
-                value={escola}
-                onChangeText={setEscola}
-                returnKeyType="next"
-              />
-
-              <Text style={[styles.label, { color: darkMode ? "#fff" : "#555" }]}>
-                PERÍODO ESCOLAR
-              </Text>
-              <View
-                style={[
-                  styles.inputIcon,
-                  {
-                    backgroundColor: darkMode ? "#192230" : "#fff",
-                    borderColor: darkMode ? "#555" : "#ccc",
-                  },
-                ]}
-              >
-                <Ionicons
-                  name="time-outline"
-                  size={22}
-                  color={darkMode ? "#fff" : "#000000ff"}
-                />
-                <TextInput
-                  style={[styles.inputWithIcon, { color: darkMode ? "#fff" : "#333" }]}
-                  placeholder="Ex: 07h - 16:30h"
-                  placeholderTextColor={darkMode ? "#888" : "#888"}
-                  value={periodo}
-                  onChangeText={setPeriodo}
-                  returnKeyType="next"
-                />
-              </View>
-
-              <Text style={[styles.label, { color: darkMode ? "#fff" : "#555" }]}>
-                CONECTAR MOCHILA
-              </Text>
-              <TextInput
-                style={[
-                  styles.input,
-                  {
-                    backgroundColor: darkMode ? "#192230" : "#fff",
-                    color: darkMode ? "#fff" : "#333",
-                    borderColor: darkMode ? "#434343ff" : "#ccc",
-                  },
-                ]}
-                placeholder="Insira o ID do sensor"
-                placeholderTextColor={darkMode ? "#888" : "#888"}
-                value={sensorId}
-                onChangeText={setSensorId}
-                returnKeyType="done"
-              />
-
-              <TouchableOpacity style={styles.button} onPress={handleAdicionar} disabled={loading}>
-                <LinearGradient
-                  colors={
-                    darkMode ? ["#75153fff", "#75153fff"] : ["#780b47", "#64063aff"]
-                  }
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 0 }}
-                  style={styles.gradient}
-                >
-                  <Text style={styles.buttonText}>
-                    {loading ? "ADICIONANDO..." : "ADICIONAR"}
-                  </Text>
-                </LinearGradient>
-              </TouchableOpacity>
-            </>
-          ) : (
-            <View style={styles.childCard}>
-              <View style={styles.childHeader}>
-                <Text style={[styles.childName, { color: darkMode ? "#fff" : "#000" }]}>
-                  {nome}
-                </Text>
-                <TouchableOpacity onPress={handleRemover}>
-                  <FontAwesome name="trash" size={22} color={darkMode ? "#fff" : "#000"} />
-                </TouchableOpacity>
-              </View>
-              <Text style={[styles.childText, { color: darkMode ? "#bbb" : "#333" }]}>
-                🎂 {dataNascimento || "Sem data"}
-              </Text>
-              <Text style={[styles.childText, { color: darkMode ? "#bbb" : "#333" }]}>
-                🏫 {escola || "Sem escola"}
-              </Text>
-              <Text style={[styles.childText, { color: darkMode ? "#bbb" : "#333" }]}>
-                ⏰ {periodo || "Sem horário"}
-              </Text>
+              )}
             </View>
-          )}
+
+            <Text
+              style={[
+                styles.fotoText,
+                { color: darkMode ? "#fff" : "#780b47" },
+              ]}
+            >
+              Adicionar foto
+            </Text>
+          </TouchableOpacity>
+
+          {/* Inputs */}
+          <Text style={[styles.label, { color: darkMode ? "#fff" : "#555" }]}>
+            NOME
+          </Text>
+          <TextInput
+            style={[
+              styles.input,
+              {
+                backgroundColor: darkMode ? "#192230" : "#fff",
+                color: darkMode ? "#fff" : "#333",
+                borderColor: darkMode ? "#555" : "#ccc",
+              },
+            ]}
+            placeholder="Digite o nome"
+            placeholderTextColor="#888"
+            value={nome}
+            onChangeText={setNome}
+          />
+
+          <Text style={[styles.label, { color: darkMode ? "#fff" : "#555" }]}>
+            DATA DE NASCIMENTO
+          </Text>
+          <View
+            style={[
+              styles.inputIcon,
+              {
+                backgroundColor: darkMode ? "#192230" : "#fff",
+                borderColor: darkMode ? "#555" : "#ccc",
+              },
+            ]}
+          >
+            <Ionicons
+              name="calendar-outline"
+              size={22}
+              color={darkMode ? "#fff" : "#000"}
+            />
+            <TextInput
+              style={[styles.inputWithIcon, { color: darkMode ? "#fff" : "#333" }]}
+              placeholder="DD/MM/AAAA"
+              placeholderTextColor="#888"
+              value={dataNascimento}
+              keyboardType="numeric"
+              onChangeText={handleMascaraData}
+            />
+          </View>
+
+          <Text style={[styles.label, { color: darkMode ? "#fff" : "#555" }]}>
+            ESCOLA
+          </Text>
+          <TextInput
+            style={[
+              styles.input,
+              {
+                backgroundColor: darkMode ? "#192230" : "#fff",
+                color: darkMode ? "#fff" : "#333",
+                borderColor: darkMode ? "#555" : "#ccc",
+              },
+            ]}
+            placeholder="Digite a escola"
+            placeholderTextColor="#888"
+            value={escola}
+            onChangeText={setEscola}
+          />
+
+          <Text style={[styles.label, { color: darkMode ? "#fff" : "#555" }]}>
+            PERÍODO ESCOLAR
+          </Text>
+          <View
+            style={[
+              styles.inputIcon,
+              {
+                backgroundColor: darkMode ? "#192230" : "#fff",
+                borderColor: darkMode ? "#555" : "#ccc",
+              },
+            ]}
+          >
+            <Ionicons
+              name="time-outline"
+              size={22}
+              color={darkMode ? "#fff" : "#000"}
+            />
+            <TextInput
+              style={[styles.inputWithIcon, { color: darkMode ? "#fff" : "#333" }]}
+              placeholder="07:00 - 16:30"
+              placeholderTextColor="#888"
+              value={periodo}
+              onChangeText={handleMascaraHorario}
+              keyboardType="numeric"
+            />
+          </View>
+
+          <Text style={[styles.label, { color: darkMode ? "#fff" : "#555" }]}>
+            CONECTAR MOCHILA
+          </Text>
+          <TextInput
+            style={[
+              styles.input,
+              {
+                backgroundColor: darkMode ? "#192230" : "#fff",
+                color: darkMode ? "#fff" : "#333",
+                borderColor: darkMode ? "#434343" : "#ccc",
+              },
+            ]}
+            placeholder="Insira o ID do sensor"
+            placeholderTextColor="#888"
+            value={sensorId}
+            onChangeText={setSensorId}
+          />
+
+          <TouchableOpacity onPress={handleAdicionar} disabled={loading}>
+            <LinearGradient
+              colors={
+                darkMode ? ["#75153f", "#75153f"] : ["#780b47", "#64063a"]
+              }
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              style={styles.button}
+            >
+              <Text style={styles.buttonText}>
+                {loading ? "ADICIONANDO..." : "ADICIONAR"}
+              </Text>
+            </LinearGradient>
+          </TouchableOpacity>
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
 
+/* ----------------------- STYLES ------------------------ */
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
     paddingTop: Platform.OS === "android" ? StatusBar.currentHeight : 0,
   },
-  flex: { flex: 1 },
-  header: {
-    marginTop: -10,
-    height: 80,
+  flex: { flex: 1 },header: {
+    marginTop: -30,
+    height: 95,
     flexDirection: "row",
     alignItems: "flex-end",
     justifyContent: "center",
     paddingBottom: 10,
-    paddingHorizontal: 10,
+    borderRadius: 33,
   },
   headerText: {
     marginBottom: 9,
@@ -404,7 +453,6 @@ const styles = StyleSheet.create({
   formContainer: {
     paddingHorizontal: 25,
     paddingVertical: 20,
-    paddingBottom: 100, // espaço extra pro teclado
   },
   avatarWrapper: {
     width: 150,
@@ -413,88 +461,39 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     borderWidth: 3,
-    elevation: 6,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
+    marginBottom: 10,
   },
-  fotoContainer: {
-    alignItems: "center",
-    marginTop: 30,
-    marginBottom: 25,
-  },
-  fotoText: {
-    marginTop: 10,
-    fontSize: 16,
-    fontWeight: "500",
-  },
-  label: {
-    marginTop: 15,
-    fontSize: 13,
-    fontWeight: "bold",
-    marginBottom: 8,
-    textTransform: "uppercase",
-  },
+  fotoContainer: { alignItems: "center", marginTop: 30, marginBottom: 25 },
+  fotoText: { marginTop: 10, fontSize: 16, fontWeight: "500" },
+  label: { marginTop: 15, fontSize: 13, fontWeight: "bold" },
   input: {
     height: 45,
     borderRadius: 10,
-    paddingHorizontal: 15,
-    fontSize: 16,
+    paddingHorizontal: 12,
     borderWidth: 1,
-    elevation: 2,
   },
   inputIcon: {
     flexDirection: "row",
     alignItems: "center",
+    height: 45,
     borderRadius: 10,
-    paddingHorizontal: 10,
+    paddingHorizontal: 12,
     borderWidth: 1,
-    elevation: 2,
   },
   inputWithIcon: {
     flex: 1,
+    marginLeft: 10,
     fontSize: 16,
-    paddingVertical: 10,
-    marginLeft: 8,
   },
   button: {
-    marginTop: 40,
-    borderRadius: 25,
-    overflow: "hidden",
-    alignSelf: "center",
-    width: 180,
-    elevation: 5,
-  },
-  gradient: {
-    paddingVertical: 16,
+    marginTop: 30,
+    paddingVertical: 15,
+    borderRadius: 30,
     alignItems: "center",
-    borderRadius: 25,
   },
   buttonText: {
     color: "#fff",
     fontWeight: "bold",
     fontSize: 18,
-    textTransform: "uppercase",
-  },
-  childCard: {
-    backgroundColor: "#fff",
-    borderRadius: 15,
-    padding: 20,
-    elevation: 3,
-    marginTop: 40,
-  },
-  childHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
-  childName: {
-    fontSize: 24,
-    fontWeight: "bold",
-  },
-  childText: {
-    marginTop: 10,
-    fontSize: 16,
   },
 });

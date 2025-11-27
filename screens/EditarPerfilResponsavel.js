@@ -20,8 +20,9 @@ import { supabase } from "../supabaseConfig";
 import { useTheme } from "../ThemeContext";
 
 export default function EditarResponsavel({ navigation }) {
-   const { darkMode, theme } = useTheme();
+  const { darkMode, theme } = useTheme();
   const [user, setUser] = useState(null);
+
   const [nome, setNome] = useState("");
   const [email, setEmail] = useState("");
   const [telefone, setTelefone] = useState("");
@@ -34,12 +35,9 @@ export default function EditarResponsavel({ navigation }) {
     carregarUsuario();
   }, []);
 
-  // =========================
-  // PEGAR DADOS DO USUÁRIO
-  // =========================
+  // BUSCAR PERFIL
   const carregarUsuario = async () => {
     const { data, error } = await supabase.auth.getUser();
-
     if (error || !data.user) {
       Alert.alert("Erro", "Não foi possível buscar usuário.");
       return;
@@ -48,91 +46,72 @@ export default function EditarResponsavel({ navigation }) {
     const loggedUser = data.user;
     setUser(loggedUser);
 
-    // busca na tabela users
-    const { data: perfil, error: selectError } = await supabase
+    const { data: perfil } = await supabase
       .from("users")
       .select("*")
       .eq("id", loggedUser.id)
       .single();
 
-    if (selectError || !perfil) {
-      await supabase.from("users").insert({
-        id: loggedUser.id,
-        nome: loggedUser.user_metadata?.full_name || "",
-        email: loggedUser.email,
-        tel: "",
-        foto_url: "",
-      });
+    if (!perfil) return;
 
-      setNome(loggedUser.user_metadata?.full_name || "");
-      setEmail(loggedUser.email);
-      setTelefone("");
-      setFotoUrl("");
-    } else {
-      setNome(perfil.nome);
-      setEmail(perfil.email);
-      setTelefone(perfil.tel);
-      setFotoUrl(perfil.foto_url);
-    }
+    setNome(perfil.nome);
+    setEmail(perfil.email);
+    setTelefone(perfil.tel);
+    setFotoUrl(perfil.foto_url);
   };
 
-  // =========================
   // SELECIONAR FOTO
-  // =========================
   const escolherFoto = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
-      quality: 0.8,
+      quality: 1,
     });
 
-    if (!result.canceled) {
-      await enviarFoto(result.assets[0]);
-    }
+    if (result.canceled) return;
+
+    const asset = result.assets[0];
+
+    setFotoUrl(asset.uri);
+    await enviarFoto(asset);
   };
 
-  // =========================
-  // UPLOAD REAL DA FOTO (BLOB)
-  // =========================
+  // UPLOAD FOTO
   const enviarFoto = async (image) => {
     try {
       setCarregando(true);
 
-      // Converter URI → Blob
       const response = await fetch(image.uri);
       const blob = await response.blob();
 
-      const ext = image.uri.split(".").pop();
-      const fileName = `${user.id}_${Date.now()}.${ext}`;
-      const filePath = `perfil/${fileName}`;
+      const fileName = `responsaveis/${user.id}_${Date.now()}.jpg`;
 
-      // Upload correto com Blob
       const { error: uploadError } = await supabase.storage
-        .from("imagens")
-        .upload(filePath, blob, {
-          contentType: blob.type,
+        .from("fotos")
+        .upload(fileName, blob, {
           upsert: true,
+          contentType: "image/jpeg",
         });
 
-      if (uploadError) throw uploadError;
+      if (uploadError) {
+        console.log(uploadError);
+        Alert.alert("Erro", "Não foi possível enviar a foto.");
+        return;
+      }
 
-      // Pegar URL pública
       const { data } = supabase.storage
-        .from("imagens")
-        .getPublicUrl(filePath);
+        .from("fotos")
+        .getPublicUrl(fileName);
 
       setFotoUrl(data.publicUrl);
     } catch (err) {
       console.log(err);
-      Alert.alert("Erro", "Não foi possível enviar a foto.");
     } finally {
       setCarregando(false);
     }
   };
 
-  // =========================
-  // SALVAR PERFIL COMPLETO
-  // =========================
+  // SALVAR PERFIL
   const salvarPerfil = async () => {
     if (!user) return;
 
@@ -143,21 +122,16 @@ export default function EditarResponsavel({ navigation }) {
 
     setCarregando(true);
 
-    // Atualiza tabela users
     const { error: upsertError } = await supabase
       .from("users")
-      .upsert(
-        {
-          id: user.id,
-          nome,
-          email,
-          tel: telefone,
-          foto_url: fotoUrl,
-        },
-        { onConflict: "id" }
-      );
+      .update({
+        nome,
+        email,
+        tel: telefone,
+        foto_url: fotoUrl,
+      })
+      .eq("id", user.id);
 
-    // Atualiza Auth
     let authError = null;
     if (email !== user.email || novaSenha) {
       const { error } = await supabase.auth.updateUser({
@@ -170,7 +144,6 @@ export default function EditarResponsavel({ navigation }) {
     setCarregando(false);
 
     if (upsertError || authError) {
-      console.log(upsertError, authError);
       Alert.alert("Erro", "Falha ao salvar alterações.");
     } else {
       Alert.alert("Sucesso", "Perfil atualizado!");
@@ -178,27 +151,25 @@ export default function EditarResponsavel({ navigation }) {
     }
   };
 
-  // =========================
-  // RENDER
-  // =========================
-
   return (
-   <SafeAreaView
-  style={[
-    styles.safeArea,
-    { backgroundColor: theme.colors.background },
-  ]}
->
+    <SafeAreaView
+      style={[
+        styles.safeArea,
+        { backgroundColor: theme.colors.background },
+      ]}
+    >
       <KeyboardAvoidingView
         style={{ flex: 1 }}
         behavior={Platform.OS === "ios" ? "padding" : "height"}
-        keyboardVerticalOffset={Platform.OS === "ios" ? 80 : 20}
       >
         <View
-           style={[styles.container, { backgroundColor: darkMode ? "#192230" : "#e9e9eb" }]}
+          style={[
+            styles.container,
+            { backgroundColor: darkMode ? "#192230" : "#e9e9eb" },
+          ]}
         >
           <LinearGradient
-            colors={["#000000", "#780b47"]}
+            colors={["#5f0738", "#5f0738"]}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 0 }}
             style={styles.header}
@@ -212,11 +183,7 @@ export default function EditarResponsavel({ navigation }) {
             <Text style={styles.headerText}>EDITAR PERFIL</Text>
           </LinearGradient>
 
-          <ScrollView
-            showsVerticalScrollIndicator={false}
-            contentContainerStyle={styles.scrollContent}
-            keyboardShouldPersistTaps="handled"
-          >
+          <ScrollView showsVerticalScrollIndicator={false}>
             <View style={styles.avatarContainer}>
               <TouchableOpacity onPress={escolherFoto}>
                 <View
@@ -231,7 +198,11 @@ export default function EditarResponsavel({ navigation }) {
                   {fotoUrl ? (
                     <Image
                       source={{ uri: fotoUrl }}
-                      style={{ width: 150, height: 150, borderRadius: 75 }}
+                      style={{
+                        width: 150,
+                        height: 150,
+                        borderRadius: 75,
+                      }}
                     />
                   ) : (
                     <Ionicons
@@ -263,60 +234,118 @@ export default function EditarResponsavel({ navigation }) {
                 { backgroundColor: darkMode ? "#131b28ff" : "#fff" },
               ]}
             >
-              <Text style={[styles.label, { color: darkMode ? "#fff" : "#555" }]}>
+              {/* NOME */}
+              <Text
+                style={[
+                  styles.label,
+                  { color: darkMode ? "#fff" : "#333" },
+                ]}
+              >
                 NOME
               </Text>
               <TextInput
-                style={[styles.input, { color: darkMode ? "#fff" : "#333" }]}
+                style={[
+                  styles.input,
+                  {
+                    color: darkMode ? "#fff" : "#000",
+                    borderBottomColor: darkMode ? "#ccc" : "#999",
+                  },
+                ]}
                 value={nome}
                 onChangeText={setNome}
               />
 
-              <Text style={[styles.label, { color: darkMode ? "#fff" : "#555" }]}>
+              {/* EMAIL */}
+              <Text
+                style={[
+                  styles.label,
+                  { color: darkMode ? "#fff" : "#333" },
+                ]}
+              >
                 EMAIL
               </Text>
               <TextInput
-                style={[styles.input, { color: darkMode ? "#fff" : "#333" }]}
+                style={[
+                  styles.input,
+                  {
+                    color: darkMode ? "#fff" : "#000",
+                    borderBottomColor: darkMode ? "#ccc" : "#999",
+                  },
+                ]}
                 value={email}
                 onChangeText={setEmail}
                 keyboardType="email-address"
               />
 
-              <Text style={[styles.label, { color: darkMode ? "#fff" : "#555" }]}>
+              {/* TELEFONE */}
+              <Text
+                style={[
+                  styles.label,
+                  { color: darkMode ? "#fff" : "#333" },
+                ]}
+              >
                 TELEFONE
               </Text>
               <TextInput
-                style={[styles.input, { color: darkMode ? "#fff" : "#333" }]}
+                style={[
+                  styles.input,
+                  {
+                    color: darkMode ? "#fff" : "#000",
+                    borderBottomColor: darkMode ? "#ccc" : "#999",
+                  },
+                ]}
                 value={telefone}
                 onChangeText={setTelefone}
                 keyboardType="phone-pad"
               />
 
-              <Text style={[styles.label, { color: darkMode ? "#fff" : "#555" }]}>
+              {/* SENHA */}
+              <Text
+                style={[
+                  styles.label,
+                  { color: darkMode ? "#fff" : "#333" },
+                ]}
+              >
                 NOVA SENHA
               </Text>
               <TextInput
-                style={[styles.input, { color: darkMode ? "#fff" : "#333" }]}
+                secureTextEntry
+                style={[
+                  styles.input,
+                  {
+                    color: darkMode ? "#fff" : "#000",
+                    borderBottomColor: darkMode ? "#ccc" : "#999",
+                  },
+                ]}
                 value={novaSenha}
                 onChangeText={setNovaSenha}
-                secureTextEntry
               />
 
-              <Text style={[styles.label, { color: darkMode ? "#fff" : "#555" }]}>
+              <Text
+                style={[
+                  styles.label,
+                  { color: darkMode ? "#fff" : "#333" },
+                ]}
+              >
                 CONFIRMAR SENHA
               </Text>
               <TextInput
-                style={[styles.input, { color: darkMode ? "#fff" : "#333" }]}
+                secureTextEntry
+                style={[
+                  styles.input,
+                  {
+                    color: darkMode ? "#fff" : "#000",
+                    borderBottomColor: darkMode ? "#ccc" : "#999",
+                  },
+                ]}
                 value={confirmarSenha}
                 onChangeText={setConfirmarSenha}
-                secureTextEntry
               />
             </View>
 
             <TouchableOpacity
               style={styles.saveButton}
               onPress={salvarPerfil}
-              disabled={carregando}
             >
               <Text style={styles.saveButtonText}>
                 {carregando ? "SALVANDO..." : "SALVAR"}
@@ -335,14 +364,15 @@ const styles = StyleSheet.create({
     paddingTop: Platform.OS === "android" ? StatusBar.currentHeight : 0,
   },
   container: { flex: 1 },
+
   header: {
-    marginTop: -10,
-    height: 80,
+    marginTop: -30,
+    height: 95,
     flexDirection: "row",
     alignItems: "flex-end",
     justifyContent: "center",
     paddingBottom: 10,
-    paddingHorizontal: 10,
+    borderRadius: 33,
   },
   headerText: {
     marginBottom: 9,
@@ -350,17 +380,15 @@ const styles = StyleSheet.create({
     fontWeight: "100",
     color: "#fff",
   },
-  backButton: {
-    position: "absolute",
-    left: 23,
-    bottom: 26,
-  },
-  scrollContent: { paddingBottom: 50 },
+
+  backButton: { position: "absolute", left: 23, bottom: 26 },
+
   avatarContainer: {
     alignItems: "center",
     marginTop: 30,
     marginBottom: 20,
   },
+
   avatarWrapper: {
     width: 150,
     height: 150,
@@ -369,12 +397,8 @@ const styles = StyleSheet.create({
     alignItems: "center",
     borderWidth: 3,
     marginBottom: 10,
-    elevation: 5,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
   },
+
   editIcon: {
     position: "absolute",
     bottom: 5,
@@ -385,26 +409,28 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: "#fff",
   },
-  nomeResponsavel: { fontSize: 28, fontWeight: "bold", marginBottom: 5 },
+
+  nomeResponsavel: { fontSize: 28, fontWeight: "bold" },
+
   inputContainer: {
     marginHorizontal: 25,
     marginTop: 20,
     borderRadius: 15,
     padding: 20,
-    elevation: 3,
   },
+
   label: {
     marginTop: 15,
     fontSize: 13,
     fontWeight: "bold",
-    marginBottom: 8,
-    textTransform: "uppercase",
   },
+
   input: {
     height: 45,
     borderBottomWidth: 1,
     fontSize: 16,
   },
+
   saveButton: {
     backgroundColor: "#780b47",
     paddingVertical: 15,
@@ -418,6 +444,5 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontWeight: "bold",
     fontSize: 18,
-    textTransform: "uppercase",
   },
 });

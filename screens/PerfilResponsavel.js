@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import {
   View,
   Text,
@@ -8,24 +8,66 @@ import {
   SafeAreaView,
   Platform,
   StatusBar,
+  Image
 } from "react-native";
 import { Ionicons, MaterialIcons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
-import { useTheme } from "../ThemeContext"; 
+import { useTheme } from "../ThemeContext";
+import { supabase } from "../supabaseConfig";
+import { useFocusEffect } from "@react-navigation/native";
 
 export default function PerfilResponsavel({ navigation }) {
-const { darkMode, theme, toggleTheme } = useTheme();
+  const { darkMode, theme, toggleTheme } = useTheme();
+  const [usuario, setUsuario] = useState(null);
+
+  /* ---------------------- FUNÇÃO QUE BUSCA O USUÁRIO ---------------------- */
+  async function carregarUsuario() {
+    try {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      if (!user) return;
+
+      const { data, error } = await supabase
+        .from("users")
+        .select("*")
+        .eq("id", user.id)
+        .single();
+
+      if (!error) setUsuario(data);
+    } catch (e) {
+      console.log("Erro ao carregar usuário:", e);
+    }
+  }
+
+  /* --------------------------- CARREGA NO INÍCIO -------------------------- */
+  useEffect(() => {
+    carregarUsuario();
+  }, []);
+
+  /* ---------- ATUALIZA AUTOMATICAMENTE AO VOLTAR PARA A TELA ------------- */
+  useFocusEffect(
+    useCallback(() => {
+      carregarUsuario();
+    }, [])
+  );
 
   return (
     <SafeAreaView
-     style={[
-       styles.safeArea,
-       { backgroundColor: theme.colors.background },
-     ]}
-   >
-      <View   style={[styles.container, { backgroundColor: darkMode ? "#192230" : "#e9e9eb" }]}>
+      style={[
+        styles.safeArea,
+        { backgroundColor: theme.colors.background },
+      ]}
+    >
+      <View
+        style={[
+          styles.container,
+          { backgroundColor: darkMode ? "#192230" : "#e9e9eb" },
+        ]}
+      >
         <LinearGradient
-          colors={["#000000", "#780b47"]}
+          colors={["#5f0738", "#5f0738"]}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 0 }}
           style={styles.header}
@@ -33,28 +75,50 @@ const { darkMode, theme, toggleTheme } = useTheme();
           <Text style={styles.headerText}>PERFIL RESPONSÁVEL</Text>
         </LinearGradient>
 
+        {/* ---------------------------- FOTO + NOME ---------------------------- */}
         <View style={styles.avatarContainer}>
           <View
             style={[
               styles.avatarWrapper,
-              { borderColor: "#722044ff" }, 
+              { borderColor: "#722044ff" },
             ]}
           >
-            <Ionicons
-              name="person"
-              size={110}
-              color={darkMode ? "#fff" : "#192230"}
-            />
+            {usuario?.foto_url ? (
+              <Image
+                source={{ uri: usuario.foto_url }}
+                style={styles.avatarImg}
+              />
+            ) : (
+              <Ionicons
+                name="person"
+                size={110}
+                color={darkMode ? "#fff" : "#192230"}
+              />
+            )}
           </View>
+
+          <Text
+            style={{
+              marginTop: 5,
+              fontSize: 22,
+              fontWeight: "600",
+              color: darkMode ? "#fff" : "#192230",
+            }}
+          >
+            {usuario?.nome ?? "Carregando..."}
+          </Text>
         </View>
 
+        {/* -------------------------- CARDS DE AÇÕES -------------------------- */}
         <View style={styles.cardsContainer}>
           <TouchableOpacity
-            style={[styles.optionCard, { backgroundColor: "#5f0738" }]} 
+            style={[styles.optionCard, { backgroundColor: "#5f0738" }]}
             onPress={() => navigation.navigate("EditarResponsavel")}
           >
             <MaterialIcons name="edit" size={28} color="#fff" />
-            <Text style={[styles.optionText, { color: "#fff" }]}>Editar perfil</Text>
+            <Text style={[styles.optionText, { color: "#fff" }]}>
+              Editar perfil
+            </Text>
             <MaterialIcons
               name="keyboard-arrow-right"
               size={24}
@@ -63,14 +127,16 @@ const { darkMode, theme, toggleTheme } = useTheme();
             />
           </TouchableOpacity>
 
-          <View style={[styles.optionCard, { backgroundColor: "#5f0738" }]}> 
+          <View style={[styles.optionCard, { backgroundColor: "#5f0738" }]}>
             <Ionicons name="moon" size={28} color="#fff" />
-            <Text style={[styles.optionText, { color: "#fff" }]}>Modo escuro</Text>
+            <Text style={[styles.optionText, { color: "#fff" }]}>
+              Modo escuro
+            </Text>
             <Switch
               value={darkMode}
-              onValueChange={toggleTheme} 
+              onValueChange={toggleTheme}
               trackColor={{ false: "#e5e2e2", true: "#9e9c9c" }}
-              thumbColor={darkMode ? "#f9f4f6ff" : "#f4f3f4"} 
+              thumbColor={darkMode ? "#f9f4f6ff" : "#f4f3f4"}
               ios_backgroundColor="#3e3e3e"
               style={styles.switchToggle}
             />
@@ -81,7 +147,9 @@ const { darkMode, theme, toggleTheme } = useTheme();
             onPress={() => navigation.navigate("GerenciarCrianca")}
           >
             <Ionicons name="happy" size={28} color="#fff" />
-            <Text style={[styles.optionText, { color: "#fff" }]}>Gerenciar criança</Text>
+            <Text style={[styles.optionText, { color: "#fff" }]}>
+              Gerenciar criança
+            </Text>
             <MaterialIcons
               name="keyboard-arrow-right"
               size={24}
@@ -104,13 +172,13 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   header: {
-    marginTop: -10,
-    height: 80,
+    marginTop: -30,
+    height: 95,
     flexDirection: "row",
     alignItems: "flex-end",
     justifyContent: "center",
     paddingBottom: 10,
-    paddingHorizontal: 10,
+    borderRadius: 33,
   },
   headerText: {
     marginBottom: 9,
@@ -131,10 +199,11 @@ const styles = StyleSheet.create({
     borderWidth: 3,
     marginBottom: 10,
     elevation: 5,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
+  },
+  avatarImg: {
+    width: "100%",
+    height: "100%",
+    borderRadius: 75,
   },
   cardsContainer: {
     marginTop: 14,
@@ -148,10 +217,6 @@ const styles = StyleSheet.create({
     borderRadius: 30,
     marginBottom: 10,
     elevation: 3,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.22,
-    shadowRadius: 2.22,
   },
   optionText: {
     marginLeft: 15,
