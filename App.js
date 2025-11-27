@@ -1,3 +1,38 @@
+
+
+const styles = StyleSheet.create({
+  drawerContent: {
+    flex: 1,
+    backgroundColor: "#192230",
+    paddingTop: 20,
+  },
+  closeBtn: {
+    alignItems: "flex-start",
+    marginLeft: 15,
+    marginBottom: 20,
+    marginTop: 30,
+  },
+  label: {
+    color: "#fff",
+    fontSize: 18,
+    marginLeft: 10,
+  },
+  bottomArea: {
+    marginTop: "auto",
+    marginBottom: 30,
+    paddingLeft: 20,
+  },
+  logoutRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 10,
+  },
+  logoutText: {
+    color: "#fff",
+    fontWeight: "bold",
+    fontSize: 16,
+  },
+});
 import React, { useEffect } from "react";
 import {
   View,
@@ -62,7 +97,6 @@ function PerfilStackNavigator() {
   );
 }
 
-// MENU LATERAL
 function CustomDrawerContent(props) {
   return (
     <DrawerContentScrollView {...props} contentContainerStyle={styles.drawerContent}>
@@ -131,31 +165,56 @@ function DrawerNavigator() {
   return (
     <Drawer.Navigator
       screenOptions={({ navigation }) => ({
-        headerStyle: { backgroundColor: "#000" },
+        headerStyle: { backgroundColor: "#192230" }, // azul original
         headerTintColor: "#fff",
         headerTitle: "",
         headerLeft: () => (
           <TouchableOpacity onPress={() => navigation.openDrawer()}>
-            <FontAwesome5 name="bars" size={20} color="#fff" style={{ marginLeft: 15 }} />
+            <FontAwesome5
+              name="bars"
+              size={20}
+              color="#fff"
+              style={{ marginLeft: 15 }}
+            />
           </TouchableOpacity>
         ),
         headerRight: () => (
           <Image
             source={require("./src/assets/logo_geosync_fundotransparente.png")}
-            style={{ width: 200, height: 200, marginRight: -55, marginTop: 35 }}
+            style={{
+              width: 200,
+              height: 200,
+              marginRight: -55,
+              marginTop: 35,
+            }}
             resizeMode="contain"
           />
         ),
-        drawerStyle: { backgroundColor: "#000" },
+        drawerStyle: { backgroundColor: "#192230" }, // azul original
       })}
       drawerContent={(props) => <CustomDrawerContent {...props} />}
     >
       <Drawer.Screen name="Home" component={Home} />
       <Drawer.Screen name="Notificações" component={Notificacoes} />
+
+      {/* PERFIL STACK */}
       <Drawer.Screen name="Perfil" component={PerfilStackNavigator} />
+
+      {/* LISTAGEM DE CRIANÇAS */}
       <Drawer.Screen name="listarCrianca" component={listarCrianca} />
+
+      {/* MANUAL */}
       <Drawer.Screen name="Manual" component={ManualMochila} />
-      <Drawer.Screen name="Localizacao"component={Localizacao}options={{gestureEnabled: true,swipeEdgeWidth: 300,}}/>
+
+      {/* LOCALIZAÇÃO — agora com swipe e gestures habilitados */}
+      <Drawer.Screen
+        name="Localizacao"
+        component={Localizacao}
+        options={{
+          gestureEnabled: true,
+          swipeEdgeWidth: 300, // permite abrir o drawer mesmo com MapView
+        }}
+      />
     </Drawer.Navigator>
   );
 }
@@ -205,38 +264,3 @@ export default function App() {
     </ThemeProvider>
   );
 }
-
-
-const styles = StyleSheet.create({
-  drawerContent: {
-    flex: 1,
-    backgroundColor: "#000",
-    paddingTop: 20,
-  },
-  closeBtn: {
-    alignItems: "flex-start",
-    marginLeft: 15,
-    marginBottom: 20,
-    marginTop: 30,
-  },
-  label: {
-    color: "#fff",
-    fontSize: 18,
-    marginLeft: 10,
-  },
-  bottomArea: {
-    marginTop: "auto",
-    marginBottom: 30,
-    paddingLeft: 20,
-  },
-  logoutRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingVertical: 10,
-  },
-  logoutText: {
-    color: "#fff",
-    fontWeight: "bold",
-    fontSize: 16,
-  },
-});

@@ -5,13 +5,13 @@ import { LinearGradient } from "expo-linear-gradient";
 import { useTheme } from "../ThemeContext";
 
 export default function ManualMochila() {
-  const { darkMode } = useTheme();
+  const { darkMode, theme } = useTheme();
   const { width } = Dimensions.get("screen");
 
   return (
-    <View style={{ flex: 1, backgroundColor: darkMode ? "#000" : "#e9e9eb" }}>
+    <View style={{ flex: 1, backgroundColor: darkMode ? "#192230" : "#e9e9eb" }}>
       <LinearGradient
-        colors={["#000000ff", "#780b47"]}
+        colors={["#5f0738", "#5f0738"]} 
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 0 }}
         style={styles.header}
@@ -20,8 +20,7 @@ export default function ManualMochila() {
       </LinearGradient>
 
       <ScrollView
-        style={[styles.container, { backgroundColor: darkMode ? "#000" : "#e9e9eb" }]}
-        showsVerticalScrollIndicator={false}
+       style={[styles.container, { backgroundColor: darkMode ? "#192230" : "#e9e9eb" }]}
       >
         <Image
           source={require("../src/assets/img_manual.png")}
@@ -43,7 +42,7 @@ export default function ManualMochila() {
         </View>
 
         <View style={[styles.card, {
-          backgroundColor: darkMode ? "#1a1a1a" : "#f9f1f7",
+          backgroundColor: darkMode ? "#151d2aff" : "#f9f1f7",
           borderLeftColor: darkMode ? "#f61f7c" : "#96125B"
         }]}>
           <Text style={[styles.cardTitle, { color: darkMode ? "#f61f7c" : "#96125B" }]}>
@@ -79,14 +78,14 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 15,
   },
-  header: {
-    marginTop: -10,
-    height: 80,
+ header: {
+    marginTop: -30,
+    height: 95,
     flexDirection: "row",
     alignItems: "flex-end",
     justifyContent: "center",
     paddingBottom: 10,
-    paddingHorizontal: 10,
+    borderRadius: 33,
   },
   headerText: {
     marginBottom: 9,

@@ -7,7 +7,7 @@ import { supabase } from "../supabaseConfig";
 import * as Notifications from "expo-notifications";
 
 export default function Localizacao() {
-  const { darkMode } = useTheme();
+  const { darkMode, theme } = useTheme();
   const [alertaEnviado, setAlertaEnviado] = useState(false);
   const alertaEnviadoRef = useRef(false);
   const [mostrarHistorico, setMostrarHistorico] = useState(false);
@@ -259,10 +259,7 @@ export default function Localizacao() {
       {/* painel informações */}
       <View
       pointerEvents="box-none"
-        style={[
-          styles.infoContainer,
-          { backgroundColor: darkMode ? "#1a1a1a" : "#fff" },
-        ]}
+        style={[styles.container, { backgroundColor: darkMode ? "#192230" : "#e9e9eb" }]}
       >
         <Text style={[styles.nome, { color: darkMode ? "#f61f7c" : "#c2185b" }]}>Lucas</Text>
         <Text style={[styles.subtitulo, { color: darkMode ? "#ccc" : "#555" }]}>
@@ -281,7 +278,7 @@ export default function Localizacao() {
           <View
             style={[
               styles.statusBox,
-              { backgroundColor: darkMode ? "#2a2a2a" : "#000" },
+              { backgroundColor: darkMode ? "#0d1727ff" : "#0d1727ff" },
             ]}
           >
             <Text style={[styles.mocha, { color: darkMode ? "#fff" : "#fff" }]}>
