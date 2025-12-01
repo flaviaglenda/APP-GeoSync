@@ -129,7 +129,7 @@ function CustomDrawerContent(props) {
       />
 
       <DrawerItem
-        label="Localizacaos"
+        label="Localizacao"
         labelStyle={styles.label}
         icon={() => <FontAwesome5 name="map-marker-alt" size={20} color="#fff" />}
         onPress={() => props.navigation.navigate("listarCrianca")}

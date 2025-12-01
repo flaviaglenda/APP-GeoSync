@@ -16,7 +16,7 @@ import { supabase } from "../supabaseConfig";
 import { useFocusEffect } from '@react-navigation/native';
 
 export default function GerenciarCriancas({ navigation }) {
-    const { darkMode } = useTheme();
+    const { darkMode, theme } = useTheme();
 
     const [criancas, setCriancas] = useState([]);
     const [carregando, setCarregando] = useState(true);
@@ -66,19 +66,23 @@ export default function GerenciarCriancas({ navigation }) {
         <SafeAreaView
             style={[
                 styles.safeArea,
-                { backgroundColor: darkMode ? "#000" : "#e9e9eb" },
+                { backgroundColor: theme.colors.background },
             ]}
         >
             <View
-                style={[styles.container, { backgroundColor: darkMode ? "#000" : "#e9e9eb" }]}
+                style={[
+                    styles.container,
+                    { backgroundColor: darkMode ? "#192230" : "#e9e9eb" },
+                ]}
             >
+
                 <LinearGradient
-                    colors={["#000000", "#780b47"]}
+                    colors={["#5f0738", "#5f0738"]}
                     start={{ x: 0, y: 0 }}
                     end={{ x: 1, y: 0 }}
                     style={styles.header}
                 >
-                    
+
                     <Text style={styles.headerText}>RASTREADORES</Text>
                 </LinearGradient>
 
@@ -93,7 +97,7 @@ export default function GerenciarCriancas({ navigation }) {
                                 key={item.id}
                                 style={[
                                     styles.childCard,
-                                    { backgroundColor: darkMode ? "#1a1a1a" : "#fff" },
+                                    { backgroundColor: darkMode ? "#0d1727ff" : "#fff" },
                                 ]}
                                 onPress={() =>
                                     navigation.navigate("Localizacao", {
@@ -150,15 +154,14 @@ const styles = StyleSheet.create({
     },
     container: {
         flex: 1,
-    },
-    header: {
-        marginTop: -10,
-        height: 80,
+    }, header: {
+        marginTop: -30,
+        height: 95,
         flexDirection: "row",
         alignItems: "flex-end",
         justifyContent: "center",
         paddingBottom: 10,
-        paddingHorizontal: 10,
+        borderRadius: 33,
     },
     headerText: {
         marginBottom: 9,
