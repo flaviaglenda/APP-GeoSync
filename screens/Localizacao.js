@@ -255,6 +255,9 @@ export default function Localizacao({ route, navigation }) {
       content: { title: "⚠️ Alerta de Segurança", body: "A criança saiu da área segura!" },
       trigger: null,
     });
+
+      salvarNotificacaoNoBanco("fora_area", "A criança saiu da área segura!");
+      
     alertaEnviadoRef.current = true;
   }
 
