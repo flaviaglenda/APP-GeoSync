@@ -1,70 +1,130 @@
 import React, { useEffect, useState } from "react";
-import { 
-  View, 
-  Text, 
-  TouchableOpacity, 
-  Image, 
-  StyleSheet, 
-  ScrollView 
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  Image,
+  StyleSheet,
+  ScrollView
 } from "react-native";
-import { Ionicons, FontAwesome5, MaterialIcons } from "@expo/vector-icons";
+import { Ionicons, MaterialIcons, FontAwesome5 } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useTheme } from "../ThemeContext";
 import { supabase } from "../supabaseConfig";
 import { useIsFocused } from "@react-navigation/native";
+import MapView, { Marker } from "react-native-maps";
 
 export default function HomeScreen({ navigation }) {
+  const [localizacao, setLocalizacao] = useState(null);
   const { darkMode, theme } = useTheme();
   const isFocused = useIsFocused();
 
   const [criancas, setCriancas] = useState([]);
 
+  // 🔥 Quando carregar crianças → pega última localização
+  useEffect(() => {
+    if (criancas.length > 0) {
+      const c = criancas[0];
+
+      if (c.mochila_id) {
+        buscarUltimaLocalizacao(c.mochila_id);
+      } else {
+        console.log("⚠ Criança não possui mochila cadastrada.");
+      }
+    }
+  }, [criancas]);
+
+  // 🔥 Recarregar crianças quando voltar pra tela
   useEffect(() => {
     if (isFocused) {
       carregarCriancas();
     }
   }, [isFocused]);
 
+  // ✔ Buscar crianças do usuário
   const carregarCriancas = async () => {
-    // pega a sessão atual
     const { data: { session } } = await supabase.auth.getSession();
 
     if (!session) {
-      setCriancas([]); // nenhum usuário logado
+      setCriancas([]);
       return;
     }
 
     const userId = session.user.id;
 
-    // pega só as crianças desse usuário
     const { data, error } = await supabase
       .from("criancas")
-      .select("*")
+      .select(`*,mochila:mochila_id (*)`)
       .eq("usuario_id", userId);
 
     if (error) {
-      console.log("Erro ao carregar crianças:", error.message);
+      console.log("⚠ Erro ao carregar crianças:", error.message);
       setCriancas([]);
-    } else {
-      setCriancas(data || []);
+      return;
     }
+
+    setCriancas(data || []);
   };
 
+ function verificarCriancaAntesDeAbrirLocalizacao() {
+  if (criancas.length === 0) {
+    alert("Você precisa adicionar uma criança primeiro!");
+    navigation.navigate("Perfil", {
+      screen: "GerenciarCrianca"
+    });
+    return; // 👈 Impede que continue executando
+  }
+
+  // Se tiver criança → abre a tela normal
+  navigation.navigate("listarCrianca");
+}
+  // ✔ Buscar a última localização no gps_dados
+  async function buscarUltimaLocalizacao(mochilaId) {
+    console.log("📌 Mochila ID recebido:", mochilaId);
+
+    if (!mochilaId) {
+      console.log("⚠ mochila_id é null");
+      return;
+    }
+
+    const { data, error } = await supabase
+      .from("gps_dados")
+      .select("*")
+      .eq("mochila_id", mochilaId)
+      .order("data_hora", { ascending: false })
+      .limit(1);
+
+    if (error) {
+      console.log("Erro GPS:", error);
+      return;
+    }
+
+    console.log("📡 Dados crus recebidos do GPS:", data);
+
+    if (data && data.length > 0) {
+      const registro = data[0];
+
+      if (registro.latitude && registro.longitude) {
+        setLocalizacao({
+          latitude: Number(registro.latitude),
+          longitude: Number(registro.longitude)
+        });
+      }
+    }
+  }
+
   return (
-    <ScrollView 
-      style={[
-        styles.container, 
-        { backgroundColor: theme.colors.background }
-      ]}
+    <ScrollView
+      style={[styles.container, { backgroundColor: theme.colors.background }]}
     >
 
       {/* BOTÃO LOCALIZAÇÃO */}
       <TouchableOpacity
         style={[
-          styles.btnDetalhes, 
+          styles.btnDetalhes,
           { backgroundColor: darkMode ? "#fff" : "#192230" }
         ]}
-        onPress={() => navigation.navigate("Localização")}
+        onPress={verificarCriancaAntesDeAbrirLocalizacao}
       >
         <Ionicons
           name="location-outline"
@@ -72,9 +132,9 @@ export default function HomeScreen({ navigation }) {
           color={darkMode ? "#000" : "#fff"}
           style={{ marginRight: 5 }}
         />
-        <Text 
+        <Text
           style={[
-            styles.btnDetalhesText, 
+            styles.btnDetalhesText,
             { color: darkMode ? "#000" : "#fff" }
           ]}
         >
@@ -83,21 +143,35 @@ export default function HomeScreen({ navigation }) {
       </TouchableOpacity>
 
       {/* TÍTULO */}
-      <Text 
-        style={[
-          styles.title, 
-          { color: darkMode ? "#fff" : "#000" }
-        ]}
-      >
+      <Text style={[styles.title, { color: darkMode ? "#fff" : "#000" }]}>
         Supervisão de atividades
       </Text>
 
       {/* MAPA */}
       <View style={styles.mapContainer}>
-        <Image
-          source={require("../src/assets/mapa_visual.png")}
-          style={styles.mapImage}
-        />
+        {localizacao ? (
+          <MapView
+            style={styles.mapImage}
+            initialRegion={{
+              latitude: localizacao.latitude,
+              longitude: localizacao.longitude,
+              latitudeDelta: 0.01,
+              longitudeDelta: 0.01,
+            }}
+          >
+            <Marker
+              coordinate={localizacao}
+              title="Localização atual"
+            />
+          </MapView>
+        ) : (
+          <TouchableOpacity onPress={verificarCriancaAntesDeAbrirLocalizacao}>
+            <Image
+              source={require("../src/assets/mapa_visual.png")}
+              style={styles.mapImage}
+            />
+          </TouchableOpacity>
+        )}
       </View>
 
       {/* DOIS BOTÕES GRANDES */}
@@ -106,7 +180,7 @@ export default function HomeScreen({ navigation }) {
         {darkMode ? (
           <TouchableOpacity
             style={[styles.btnRoxo, { backgroundColor: "#961f53ff" }]}
-            onPress={() => navigation.navigate("Localização")}
+            onPress={verificarCriancaAntesDeAbrirLocalizacao}
           >
             <View style={styles.btnContent}>
               <Text style={styles.btnTitle}>Clique para ver</Text>
@@ -121,9 +195,9 @@ export default function HomeScreen({ navigation }) {
             end={{ x: 1, y: 1 }}
             style={styles.btnRoxo}
           >
-            <TouchableOpacity 
-              style={styles.btnContent} 
-              onPress={() => navigation.navigate("Localização")}
+            <TouchableOpacity
+              style={styles.btnContent}
+              onPress={verificarCriancaAntesDeAbrirLocalizacao}
             >
               <Text style={styles.btnTitle}>Clique para ver</Text>
               <Text style={styles.btnMain}>Localização{"\n"}em tempo real</Text>
@@ -151,8 +225,8 @@ export default function HomeScreen({ navigation }) {
             end={{ x: 1, y: 1 }}
             style={styles.btnRoxo}
           >
-            <TouchableOpacity 
-              style={styles.btnContent} 
+            <TouchableOpacity
+              style={styles.btnContent}
               onPress={() => navigation.navigate("Notificações")}
             >
               <Text style={styles.btnTitle}>Clique para ver</Text>
@@ -164,9 +238,9 @@ export default function HomeScreen({ navigation }) {
       </View>
 
       {/* STATUS */}
-      <Text 
+      <Text
         style={[
-          styles.statusTitle, 
+          styles.statusTitle,
           { color: darkMode ? "#fff" : "#000" }
         ]}
       >
@@ -182,16 +256,16 @@ export default function HomeScreen({ navigation }) {
         {/* SE NÃO TIVER NENHUMA CRIANÇA */}
         {criancas.length === 0 ? (
           <View style={{ alignItems: "center", paddingVertical: 30 }}>
-            <Ionicons 
-              name="sad-outline" 
-              size={60} 
-              color={darkMode ? "#000" : "#fff"} 
+            <Ionicons
+              name="sad-outline"
+              size={60}
+              color={darkMode ? "#000" : "#fff"}
             />
-            <Text 
-              style={{ 
-                marginTop: 15, 
-                fontSize: 20, 
-                color: darkMode ? "#000" : "#fff" 
+            <Text
+              style={{
+                marginTop: 15,
+                fontSize: 20,
+                color: darkMode ? "#000" : "#fff"
               }}
             >
               Nenhuma mochila adicionada
@@ -220,7 +294,7 @@ export default function HomeScreen({ navigation }) {
                 Última atualização há 1 hora.
               </Text>
 
-              <MaterialIcons name="warning" size={30} color="#a90b50ff" style={styles.warningIcon} />
+           
 
               {index !== criancas.length - 1 && <View style={styles.separator} />}
             </View>
@@ -248,7 +322,7 @@ const styles = StyleSheet.create({
   statusTitle: { fontSize: 23, fontWeight: "700", marginBottom: 10 },
   card: { borderRadius: 29, padding: 15 },
   cardTitle: { fontWeight: "700", marginBottom: 15, fontSize: 20 },
-  row: { flexDirection: "row", alignItems: "center", justifyContent: "space-between"},
+  row: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
   cardStatus: { fontSize: 18, flex: 1, marginLeft: 5 },
   percent: { fontSize: 18, marginRight: 5 },
   updateText: { fontSize: 15, marginTop: 5 },
