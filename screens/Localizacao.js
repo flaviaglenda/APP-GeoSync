@@ -428,7 +428,7 @@ export default function Localizacao({ route, navigation }) {
 
     <TouchableOpacity
       onPress={ativarModoAreaSegura}
-      style={[styles.botaoHistorico, { backgroundColor: "#ff0099" }]}
+      style={[styles.botaoHistorico, { backgroundColor: "#8b0756ff" }]}
     >
       <Ionicons name="map-outline" size={20} color="#fff" />
       <Text style={styles.textoBotao}>Criar Área Segura</Text>
