@@ -8,6 +8,7 @@ import {
     SafeAreaView,
     Platform,
     StatusBar,
+    Image,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { FontAwesome, Ionicons } from "@expo/vector-icons";
@@ -108,11 +109,24 @@ export default function GerenciarCriancas({ navigation }) {
                                 }
                             >
                                 <View style={styles.childInfo}>
-                                    <Ionicons
-                                        name="person-circle-outline"
-                                        size={60}
-                                        color={darkMode ? "#fff" : "#3f3d3dff"}
-                                    />
+                                    {item.foto_url ? (
+                  <Image
+                    source={{ uri: item.foto_url }}
+                    style={{
+                      width: 60,
+                      height: 60,
+                      borderRadius: 30,
+                      borderWidth: 2,
+                      borderColor: darkMode ? "#881052ff" : "#780b47",
+                    }}
+                  />
+                ) : (
+                  <Ionicons
+                    name="person-circle-outline"
+                    size={60}
+                    color={darkMode ? "#fff" : "#182437ff"}
+                  />
+                )}
                                     <View style={styles.childTextContainer}>
                                         <Text
                                             style={[
